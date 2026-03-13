@@ -1,0 +1,558 @@
+AZƏRBAYCAN RESPUBLİKASI ELM VƏ TƏHSİL NAZİRLİYİ
+AZƏRBAYCAN TEXNİKİ UNİVERSİTETİ
+YÜKSƏK TƏHSİL İNSTİTUTU
+Əlyazması hüququnda 
+Əliyev Əziz Əlniyaz oğlu, Əhədov Ramid Əfqan oğlu [I Fəsil]
+Nəbiyev İsmayıl Fikrət oğlu, Rzayev Taleh İlqar oğlu [II Fəsil]
+Əliyev Tamerlan Aydın oğlu [III Fəsil ]
+AQROTEXNİKİ ƏSASLI SİSTEMLƏRİN NƏZARƏT MEXANİZMİNİN MODELLƏŞDİRİLMƏSİ VƏ SİSTEMİN QURULMASI
+mövzusunda
+MAGİSTRLİK DİSSERTASİYASI
+İxtisas: 060509 – “Kompüter elmləri”
+İxtisaslaşma: - “Sistem proqramlaşdırılması”
+Elmi rəhbər: tex.e.d., professor Əhmədov Natiq Qarakişi               
+Bakı – 2025
+AZƏRBAYCAN TEXNİKİ UNİVERSİTETİ
+YÜKSƏK TƏHSİL İNSİTUTU
+                                           
+MAGİSTRANTIN ANDI
+“Aqrotexniki əsaslı sistemlərin nəzarət mexanizminin modelləşdirilməsi və sistemin qurulması” mövzusunda təqdim etdiyimiz magistrlik dissertasiyasını elmi əxlaq normalarına və istinad qaydalarına tam riayət etməklə və istifadə etdiyim bütün mənbələri ədəbiyyat siyahısında əks etdirməklə yazdığımıza and içirik və magistrlik dissertasiyasının AzTU Kitabxana İnformasiya Mərkəzində saxlanılması, həmin mərkəz tərəfindən AzTU Rəqəmsal Repozitoriyasına daxil edilərək repozitoriyanın ve saytında yerləşdirilməsinə icazə veririk.
+                            
+İsmayıl Nəbiyev Fikrət  ___________
+Tamerlan Əliyev Aydın ___________
+Əziz Əliyev Əlniyaz  _____________
+Taleh Rzayev İlqar  ______________
+Ramid Əhədov Əfqan  ___________
+                                                                       Tarix:
+MÜNDƏRICAT
+GİRİŞ5
+I FƏSİL. AQROTEXNİKİ ƏSASLI SİSTEMLƏRİN NƏZARƏT SİSTEMLƏRİNİN ƏSAS KOMPONENTLƏRİ VƏ STRUKTURU7
+1.1. Düzgün elektronik komponentlərin seçilməsi və sistem dizaynı9
+1.2. Mikrokontroller ilə serverin arasındakı əlaqənin qurulması12
+1.3. İnfrastruktur Haqqında Ümumi Məlumat15
+1.4. Orkestr16
+1.5. Consul20
+1.6. Vault23
+1.7. Nomad Daxilində İstifadə Olunan Tətbiqlər26
+1.8. Pipeline32
+II FƏSİL. SİSTEM ARXİTEKTURASI VƏ SERVER TƏRƏFİNİN TEXNİKİ REALLAŞDIRILMASI.34
+2.1. Ümumi sistem arxitekturası və istifadə olunan texnologiyalar34
+2.2. Məlumat axınının idarə edilməsi40
+2.3. İstifadəçi İdentifikasiyası və API Təhlükəsizliyi45
+2.4. Aqrotexniki Nəzarət Sistemlərində Veb Texnologiyaların Rolu48
+2.5. Frontend Arxitekturasının Ümumi Quruluşu və Sistemlərarası İnteqrasiyanın təmin olunması49
+2.6. Frontend Texnologiyaların Seçimi və Layihədə istifadəsi50
+2.7. İstifadəçi İnterfeysi və UX Dizayn56
+III FƏSİL. AQROTEXNİKADA MAŞIN ÖYRƏNMƏ MODELLƏRİN TƏTBİQİ.62
+3.1. Süni intellektin mahiyyəti.62
+3.2. Maşın öyrənmə nədir və üstünlükləri.62
+3.3. Praktiki hissə63
+Nəticə69
+Ədəbiyyat siyahı70
+GİRİŞ
+Mövzunun aktuallığı.Müasir dövrdə kənd təsərrüfatı sektoru iqlim dəyişikliyi, su və torpaq kimi təbii resursların məhdudluğu, eləcə də artan qlobal ərzaq tələbatı ilə üz-üzədir. Bu kimi çağırışlar aqrar sahədə innovativ texnologiyaların tətbiqini zəruri edir. Xüsusilə, aqrotexniki əsaslı nəzarət və idarəetmə sistemlərinin tətbiqi kənd təsərrüfatında məhsuldarlığın artırılması, resursların səmərəli istifadəsi və ətraf mühitin mühafizəsi baxımından mühüm əhəmiyyət daşıyır. Bu baxımdan aqrotexniki sistemlərin qurulması və avtomatlaşdırılması məsələsi olduqca aktualdır.
+Problemin işlənmə səviyyəsi.Aqrar sahədə müxtəlif növ texnoloji həllərin tətbiqi üzrə bir sıra beynəlxalq və yerli layihələr həyata keçirilmişdir. Bu layihələrdə əsasən torpaq və su ehtiyatlarının monitorinqi, məhsul proqnozlaşdırılması və iqlim dəyişikliklərinin təsirinin qiymətləndirilməsi kimi məsələlər öyrənilmişdir. Lakin aqrotexniki sistemlərin nəzarət mexanizmlərinin kompleks şəkildə modelləşdirilməsi, sensor-mikrokontroller-server əsaslı inteqrasiya və real vaxtda məlumatların idarə olunması sahəsində elmi yanaşmalar hələ də geniş şəkildə inkişaf etdirilməmişdir.
+Tədqiqatın obyekti.Tədqiqatın obyekti kənd təsərrüfatında istifadə olunan aqrotexniki nəzarət və idarəetmə sistemləridir.
+Tədqiqatın predmeti.Tədqiqatın predmeti ətraf mühit parametrlərini (işıq, temperatur, rütubət və torpaq rütubəti) ölçən sensorların istifadəsi, mikrokontrollerlər vasitəsilə məlumatların emalı, bu məlumatların serverə ötürülməsi və istifadəyə uyğun veb tətbiq vasitəsilə vizuallaşdırılması prosesləridir.
+Tədqiqatın məqsədi. Tədqiqatın əsas məqsədi kənd təsərrüfatı sahəsində tətbiq edilə bilən səmərəli və davamlı nəzarət sisteminin əsas texniki prinsiplərini müəyyənləşdirmək, bu sistemlərin komponentlərini (sensor, mikrokontroller, server, proqram təminatı) düzgün seçmək və onların funksional inteqrasiyasını təmin edən texnoloji model hazırlamaqdır.
+Tədqiqatın metodları və metodikası. Tədqiqat zamanı sistemli yanaşma, funksional blok modelləşdirmə, eksperimental qurğu yığılması, sensor məlumatlarının toplanması və proqramlaşdırılması metodlarından istifadə olunmuşdur. Həmçinin, real vaxtda məlumat vizuallaşdırılması və istifadəçi interfeysi üzrə proqram təminatlarının hazırlanması həyata keçirilmişdir.
+Tədqiqatın elmi yeniliyi. Tədqiqat çərçivəsində aqrotexniki nəzarət sistemləri ilk dəfə olaraq sensor şəbəkəsi, mikrokontroller əsaslı emal modulu və serverlə veb əsaslı inteqrasiyanı özündə birləşdirən vahid texnoloji çərçivədə modelləşdirilmişdir. Bu yanaşma kiçik və iri təsərrüfatlar üçün uyğunlaşdırıla bilən, miqyaslana bilən və dayanıqlı aqrotexniki nəzarət sistemlərinin yaradılması baxımından elmi yenilik sayılır.
+I FƏSİL. AQROTEXNİKİ ƏSASLI SİSTEMLƏRİN NƏZARƏT SİSTEMLƏRİNİN ƏSAS KOMPONENTLƏRİ VƏ STRUKTURU
+Sistem arxitekturasının ümumi strukturu
+Aqrotexniki sistemlərə nəzarət mexanizminin əsas komponentləri təməl olaraq aşağıdakılardan ibarət olur:
+1. Məlumatları toplanmasını təmin edən sensorlar.
+2. Məlumatları daha sonra emal edəcək olar serverlərə göndərmək üçün sensorlardan toplayan mikrokontroller.
+3. Mikrokontroller və server arasındakı əlaqəni təmin edən, modemə internetə çıxış imkanı verən cihaz (GSM modem, wifi modem, lora və sair)
+4. Məlumatları sistemli şəkildə emal edən server.
+5. Emal edilmiş məlumatları son istifadəçiyə göstərən frontend (web səhifəsi, mobil tətbiq və sair)
+Məlumat toplanması üçün uyğun sensorların seçilməsi
+Aydındır ki, nəzat mexanizminin qurulmasında ən vacib olan nüans data toplanmasının düzgün təşkilini təmin etməkdir.  Belə ki, əgər əlimizdə olan data etibarlı olmazsa, onda biz bu məlumatı emal edərək sağlam qərarlar verə bilmərik.
+Bu məlumatları biz sensorlardan toplayacağımız üçün, düzgün sensor seçimi sistemin etibarlılığı baxımından kritik önəm daşıyır.
+Spesifik sensorlar haqqında daha sonrakı bölmələrdə daha ətraflı danışacağıq. İndi isə əsas fokusumuzu sensorların növləri haqqında ümumi məlumat çatdırmağa verəcəyik.
+Sensorlar iki növ olur: Analoq sensorlar və rəqəmsal (digital) sensorlar.
+Analoq sensorlar adından da görünəcəyi kimi bizə analoq dəyərlər verən sensorlardır.
+Bu tip sensorları quraşdırmaq adətən daha asan olur. Bunlar adətən fərqli ölçümlərə uyğun fərqli gərginlik verən elektronik cihazlardır. Ən çox bilinən növləri temperatur və işıq sensorlarıdır.
+Rəqəmsal sensorlar isə, analoq sensorlardan fərqli olaraq bizə biləvasitə rəqəmsal dəyəri verən cihazlardır. Rəqəmsal sensorlardan məlumatları oxumaq üçün biz sensor üçün nəzərdə tutulmuş olan protokollardan istifadə etmək məcburiyyətindəyik. Bu protokollardan ən çox yayılmış olanlar I2C, SPI və UART protokollarıdır.
+Bu tip sensorlara tipik nümunə kimi təcil və fırlanma sensorlarını, bəzi temperatur və rütubət sensorlarını misal göstərmək olar.
+Mikrokontroller seçimi.
+Mikrokontroller seçimi çox geniş olub, bir çox fərqli parametrləri nəzərə alaraq edilməlidir. Bunlardan ən vacibləri enerji istehlakı, işlədiyi gərginlik (adətən 3.4 və ya 5v olur), ona qoşulacaq qurğuların xarakteristikası və də qiymətidir.
+Biz bu proyekt üçün ESP 8266 mikrokontrollerlərindən istifadəni məqsədəuyğun hesab etdik. Bunun əsas səbəbləri isə aşağıdakılardır:
+1. Geniş yayılması. ESP mikrokontrollerləri arduino development mühitinə inteqrasyası sayəsində yetərincə geniş yayılmış olub, bir çox hazır kitabxanasının olması səbəbi ilə kodlama zamanı işimizi yüngülləşdirməkdə bizə yardımçı olacağı qənaətindəyik. Alternativləri olan picmikrokontrollerləri bu qədər geniş yayılmış deyildir. AVR mikrokontrollerləri isə bəzi proseslər üçün yetərincə güclü deyildir (TCP/IP üzərindən TLS ilə qoşulmalar üçün AVR mikrokontrollerlərinin ramı yetərsiz qalır).
+3. Qiyməti digərlərindən (məsələn pic və ya stm32 mikrokontrollerlərindən daha aşağıdır).
+1.1. Düzgün elektronik komponentlərin seçilməsi və sistem dizaynı
+İşıq və temperatur sensorları.
+İşıq sensorları, LDR- light dependent resistor işıqdan asılı olaraq müqaviməti dəyişən xüsusi növ elektronik komponentlərdir. Bu tip sensorların üstlərinə düşən işığın şiddəti artdıqca müqaviməti azalır.
+Şəkil 1.1 LDR sensor
+Temperatur sensorları da bənzər prinsip ilə işləyir. Əsas fərqi isə bu tip sensorlarda elementin müqaviməti işıqdan yox, temperaturdan asılı olur.
+Şəkil 1.2 Termistor sensoru
+Şəkil 1.2 Termistor sensoru
+Hər iki sensor da analoq sensorlardır.
+Havanın temperatur və rütubətini ölçən sensorlara ümumi baxış, DHT21 sensoru
+Havanın rütubəti və temperaturunu eyni zamanda ölçməyə imkan verən bəzi xüsusi sensorlar vardır ki, bunlar sistemin dizaynını nisbətən sadələşdirə bilir.
+Şəkil 1.3: DHT11 sensoruŞəkil 1.4 DHT21 sensoruBu tip sensorların da bir çox modelləri vardır. Məsələn qapalı mühitdə istifadə edilə bilən, ölçmə intervalı  və dəqiqliyi nisbətən aşağı olan DHT11 sensoru və daha çətin şəraitlərdə istifadə üçün nəzərdə tutulmuş, ölçmə aralığı və dəqiqliyi daha yuxarı olan DHT21 sensorları. Hər iki sensor da rəqəmsal sensorlar olub i2c protokolu ilə əlaqəni dəstəkləyirlər. Biz proyektimizdə daha baha olmasına rəğmən, aqrotexniki sistemlər üçün ölçüm aparılması nəzərdə tutulan mühitlərə daha dözümlü olan DHT21 sensorlarını seçəcəyik.
+Şəkil 1.3: DHT11 sensoru
+Şəkil 1.4 DHT21 sensoru
+Torpaq rütubət sensorlarının növləri. Üstün və mənfi cəhətləri
+Torpaq rütubət sensorlarının əsas iki növü var:
+1. Torpağın rütubət səviyyəsinə görə elektrik keçiriciliyinin dəyişməsinə əsaslanan dəyişən müqavimətli rütubət sensorları;
+2. Yenə torpağın elektrik keçiriciliyinin dəyişməsinə əsaslanan dəyişən tutumlu kondensatorlu rütubət sensorları.
+Birinci növ sensorlar çox daha sadə quruluşlu və ucuz olur. Lakin, quruluşu gərəyi çox qısa ömürlü olurlar. Belə ki, torpağın elektrik keçiriciliyinə əsaslanan dəyişən müqaviməti təmin etmək üçün bu tip sensorlar torpağa batırılan iki elektrik keçirici lövhə ilə təmin edilmiş olurlar. Bu isə kimyadan bildiyimiz elektroliz prosesini çox daha yavaş sürətdə də olsa təmin edir və zamanla keçirici lövhələr (çox zaman pcb üzərindəki açıq izlər formasında olur, baxın: şəkil 1.5) korroziyaya uğrayaraq məhv olur.
+Şəkil 1.5: Dəyişən müqavimətli torpaq rütubət sensoru
+Şəkil 1.5: Dəyişən müqavimətli torpaq rütubət sensoru
+Digər tərəfdən dəyişən kondensatorlu torpaq rütubət sensorları torpaqdan bilavasitə elektrik keçirmək vasitəsi ilə işləmədiyi üçün olarda izoliyasiyasız keçirici yoxdur və bu səbəbdən asanlıqla korroziyaya uğramırlar. Lakin digərindən daha kompleks və qiymətcə bahadırlar.
+Şəkil 1.6: Kondensatorlu topraq rütubət sensoru
+Şəkil 1.6: Kondensatorlu topraq rütubət sensoru
+İkisi də ən çox analoq sensor olaraq işlənilir, lakin dəyişən müqavimətli rütubət sensorunun rəqəmsal (i2c protokolu ilə) olan versiyaları da mövcuddur.
+Biz bu proyektdə çox daha uzun ömürlü olduğundan kondensatorlu torpaq rütubət ölçmə sensorunu seçəcəyik.
+1.2. Mikrokontroller ilə serverin arasındakı əlaqənin qurulması
+Server ilə əlaqə metodunun və uyğun komponentlərin seçilməsi
+Aydındır ki, mikrokontroller sensorlardan məlumatları toplayıb ilkin emal etməsi ilə nəzarət sistemi bitmiş olmur. Məlumatların əsas emalı və saxlanması, son istifadəçiyə çatdırılması prosesləri serverdə backend servisi tərəfindən həyata keçirilir.
+Burada bir sual yaranır, əkin sahəsindəki mikrokontroller hansısa datacenterdəki backend ilə necə əlaqə quracaq? Əlbət də, burada bir çox texnologiyalar mövcuddur ki, fərqli şəraitlərdə köməyimizə çata bilərlər. Bunlardan əsas olanlarına nəzər yetirək:
+1. Wifi ilə qoşulma. Mikrokontrollerlərin bəziləri bu imkanı təmin edən komponentlər ilə birlikdə satılır (məsələn: Elə işlədəcəyimiz ESP mikrokontrollerlər ailəsində bu imkan mövcuddur). Bu bəzi ssenarilərdə çox optimal variant olsa da, aqrotexnika əsaslı sistemlər üçün o qədər də məqsədə uyğun deyildir. Çünki, bu sistemin işləməsi üçün əkin sahəsinə internet çəkilməli və wifi modem qoyulmalıdır. Bu enerji istehlakını çox artıracaqdır. Digər tərəfdən wifi siqnalının mikrokontroller tərəfindən optimal olaraq qəbul edilməsinin təmini texniki problemlər yaradır.
+2. Ethernet ilə qoşulma. Bu versiyada wifi ilə qoşulmada olan bəzi problemləri aradan qaldırır (xüsusən də siqnal ilə bağlı). Lakin yenə bənzər problemləri də var. Ən barizi yenə əkin yerinə internet şəbəkəsinin çəkilməsidir ki, bu da onu bir çox aqrotexniki əsaslı sistemlər üçün uyğunsuz edir.
+3. GSM GPRS modemlər. Bu modemlər digər variantlardan fərqli olaraq əlavə internet şəbəkəsinin çəkilməsinə ehtiyac duymur, mövcud mobil şəbəkədən istifadə etməklə internetə qoşulduğu üçün digər ikisində olan problemlərlə ümumiyyətlə qarşılaşmır. Bu səbəbdən də aqrotexniki əsaslı sistemlərdə istifadəyə uyğundurlar.
+Biz qiyməti, geniş əhatə dairəsidə işləyə bilməsi və digərlərinə nisbətən daha az enerji xərcələməsinə görə 2g/3g ilə işləyən modemlərdən istifadə edəcəyik.
+Burada bir neçə seçimimiz mövcuddur. Ən populyar seçimlər simcom istehsalı olan sim800L və sim800C modelləridir. İkisi də 2g ilə işləyə bilir, GPRS dəstəyi var və ən vacibi, mikrokontroller ilə proqramatik olaraq idarə oluna bilir.
+Simcom gsm modulları UART protokolu vasitəsiylə mikrokontroller ilə əlaqə yarada bilirlər.
+Mikrokontrollerin gsm modemlə fiziki əlaqəsinin təmini
+Simcom modemləri mikrokontroller ilə istifadə üçün çox rahat görünə bilər, lakin bu modemlərin də özünə məxsus çətinlikləri mövcuddur. Bunlardan ilki, modemin 3.4V-4.4V (ideal 4V) gərginlik intervalında ilə işləməsidir. Yəni biz bu modemi bilavasitə ESP8266 mikrokontrolleri ilə qidalandıra bilməyəcəyik. Lakin, bu modemlərin 5v gərinlik ilə işləməsini təmin edən komponentlər satışda mövcuddur. Bunlar bizim fiziki qoşulma işini çox daha sadələşdirir.
+Şəkil 1.7 SIM800C ilə ESP8266 arasında UART əlaqəsinin sxemi
+Şəkil 1.7 SIM800C ilə ESP8266 arasında UART əlaqəsinin sxemi
+GSM modem ilə mikrokontroller arası kommunikasiya, at komandaları
+Sim800L (Sim800C) ilə fiziki əlaqəni qurduqdan sonra, proqram üzərindən kommunikasiyanın təmin edilməsi gərəkir. Simcom cihazları da digər bir çox gsm modemləri kimi AT əmrləri adlanan xüsusi serial kommunikasiya protokolu üzərindən xəbərləşməni təmin edir. Bu əmrlərdən bir nümunə ilə ESP8366 üzərində arduino kodu ilə baxaq:
+Aşağıdaki nümunə ilə sim800l/sim800c modemi vasitəsi ilə mikrokontrollerdən istənilən nömrəyə sms göndərmək mümkündür: 
+Şəkil 1.8 ESP ilə SİM800C üzərindən sms göndərmək
+Sistemin kibertəhlükəsizliyinin təmini, HTTPS protokolu ilə serverə qoşulma. 
+ESP8266 ilə backendə sim800c modemi üzərindən HTTP ilə qoşuma əslində sadədir, bir neçə at əmri ilə mümkündür. Lakin HTTP prokotolu güvənli deyildir və backend serverində istifadəsinə yol verilməməlidir. Bu səbəbdən, bilavasitə gsm modeminin HTTP protokol implementasiyasını işlətmək yerinə, modemin daha aşağı səviyyəli olan TCP/IP protokolu imkanlarından yaralanıb TLS və HTTP implementasiyasını isə ESP8266 üzərində edəcəyik.
+Bu zaman proses belə olacaq:
+1. SIM800C backend serverin HTTPS portu olan 443 ilə TCP/IP əlaqəsi açır.
+2. ESP8266 açılan əlaqə üstündən TLS ilə şifrələnmiş güvənli bağlantı təmin edir.
+3. Biz bu bağlantıdan istifadə edərək serverə HTTP sorğusu göndəririk.
+Bu dediklərimizi reallaşdırmaq üçün bəzi əlavə kitabxanalardan istifadə edəcəyik. 
+Bunlara aşağıdakılar daxildir:
+1. ESPSoftwareSerial – bu kitabxana arduino mühitindəki SoftwareSerial kitabxanasının ESP mikrokontrollerləri üçün olan versiyasıdır. Bununla biz GSM modemə UART protokolu ilə qoşulacayıq.
+2. BearSSL – bu kitabxana isə bizim TSL implementasiyamızı təmin edəcək. 
+Bu yazıda implementasiyanın bütün detallarına girməyəcəyik, lakin qısaca qeydlər aparaq:
+BearSSL arduino kitabxanasını işlətmək üçün bizə Arduino Client interfeysini implement etmək lazımdır. Bunun üçün isə aşağıdakı bəzi metodları olan bir class yaratmalı olacağıq:
+1. Client.connect – serverə qoşulmaq üçün.
+2. Client.close – server ilə əlaqəni kəsmək üçün.
+3. Client.print, Client.println, Client.write – serverə məlumat göndərmək üçün.
+4. Client.read, Client.readString, Client.readAll – serverdən gələn məlumatları oxumaq üçün.
+5. Client.available – serverin məlumat göndərib-göndərmədiyini yoxlayır.
+1.3. İnfrastruktur Haqqında Ümumi Məlumat
+1.3.1. Sistem İnfrastrukturunun Əhəmiyyəti və Mövcud Tətbiqi
+Rəqəmsal həllərin keyfiyyətli və etibarlı şəkildə fəaliyyət göstərə bilməsi üçün onların qurulduğu texnoloji infrastruktur həlledici rol oynayır. Bu infrastruktur yalnız ilkin mərhələdə deyil, sistemin həyat dövrünün bütün mərhələlərində – planlaşdırma, inkişaf, istismar və genişləndirmə zamanı öz əhəmiyyətini qoruyub saxlayır. İstənilən proqram təminatı, istər mikroskopik ölçüdə, istərsə də iri miqyaslı korporativ həllər olsun, yalnız stabil və elastik bir infrastruktura əsaslandıqda davamlı, təhlükəsiz və asan idarəolunan olur.
+1.3.2. Mövcud İcra Mühiti və Resurslar
+Hazırda sistem bir server üzərində qurulub və bu serverin texniki spesifikasiyası aşağıdakı kimidir:
+Əməliyyat Sistemi: AlmaLinux 8.9 (64-bit) Bu əməliyyat sistemi Red Hat Enterprise Linux (RHEL) klonudur və stabil, təhlükəsiz, eyni zamanda uzunmüddətli dəstəyə malikdir. RHEL ekosisteminə uyğunluğu onu böyük miqyaslı korporativ layihələr üçün cəlbedici edir.
+CPU: 6 nüvəli prosessor Bu resurs bir neçə servisin paralel və yüksək performansla icrasına imkan verir. CPU-nun çoxnüvəli olması, xüsusilə konteynerləşdirilmiş və mikroxidmət əsaslı tətbiqlər üçün faydalıdır.
+Əməli Yaddaş (RAM): 12 GB RAM həcmi həm tətbiq səviyyəsində, həm də məlumat bazası, cache və digər servislər səviyyəsində yüksək performansı təmin edir. Eyni zamanda bu yaddaş miqdarı, sistemdə paralel proseslərin idarəolunmasına və ani yüklənmələrə qarşı davamlılığa kömək edir.
+Disk Yaddaşı: 180 GB SSD SSD texnologiyası sistemin ümumi I/O (input/output) performansına birbaşa təsir göstərir. Tətbiq və verilənlər bazası əməliyyatlarında gecikmənin az olması, sistemin cavab sürətini artırır.
+Şəbəkə Sürəti: 200 Mbit/s Bu sürət həm lokal şəbəkə daxilində, həm də xarici servislərlə kommunikasiya zamanı minimal gecikmə və sabitlik təmin edir. İnfrastruktur səviyyəsində yüksək ötürmə qabiliyyəti sistemin şaxələndirilməsi və bulud inteqrasiyası baxımından da önəmlidir.
+1.4. Orkestr
+İnformasiya texnologiyalarında "orkestrasiya" anlayışı sistemdəki fərqli komponentlərin, xidmətlərin və proseslərin avtomatlaşdırılmış şəkildə idarə olunması, əlaqələndirilməsi və uyğun ardıcıllıqla icra edilməsini ifadə edir. Bu anlayışdan törəyən "orkestr" isə bu funksiyaları yerinə yetirən texnologiya və ya proqram təminatıdır.Ən sadə formada desək, orkestr – bir çox fərqli texnologiya və servisin bir arada, uyumlu və avtomatik şəkildə işləməsini təmin edən vasitədir. Məsələn, böyük bir tətbiqin arxasında veb server, verilənlər bazası, keş sistemi, monitorinq agentləri və digər servislər ola bilər. Bu komponentlərin tək-tək idarə olunması çətin və səhvlərə açıq ola bilər. Orkestr isə bu işləri mərkəzi şəkildə, ardıcıllıqla və avtomatik həyata keçirməyə imkan verir. Hal hazırda sistemdə fəaliyyət göstərən orkestr Nomad-dır. Nomad – HashiCorp tərəfindən hazırlanmış, sadə və güclü bir orkestrasiya sistemidir. O, tətbiqlərin planlaşdırılması, yerləşdirilməsi, avtomatik miqyaslandırılması və idarəedilməsi üçün istifadə olunur. Nomad həm konteyner əsaslı (Docker, Podman və s.), həm də ənənəvi, container olmayan (binary, Java jar, script və s.) tətbiqlərin işlədilməsi üçün geniş imkanlar təqdim edir.
+1.4.1. Nomad Haqqında Ümumi və Ətraflı Məlumat
+Nomad, HashiCorp şirkətinin hazırladığı, çevik və performans baxımından effektiv olan bir iş planlaşdırma və yerləşdirmə (deployment) platformasıdır. Bu sistem tətbiqlərin avtomatik şəkildə idarə olunması, planlaşdırılması və müxtəlif serverlərdə icrasını təşkil etmək üçün nəzərdə tutulub.
+Nomad platforması klient-server arxitekturası üzərində işləyir:
+Serverlər – Burada işlərin planlaşdırılması, resursların bölgüsü və ümumi idarəetmə həyata keçirilir. Bir neçə server arasında lider seçimi olur və əsas qərarları bu lider verir.
+Agentlər (Client-lər) – Bu komponentlər faktiki olaraq tətbiqləri işə salan node-lardır. Hər agent öz resurslarını (məsələn, RAM, CPU, disk sahəsi və s.) serverə təqdim edir və ona təyin olunmuş tapşırıqları yerinə yetirir.
+Job faylları – Tətbiqlərin necə və hansı qaydada işə salınacağını müəyyən edən konfiqurasiya sənədləridir. HCL və ya JSON formatında hazırlanır və sistemə verilən göstərişləri ehtiva edir.
+Üstünlükləri: 
+Sadə və sürətli quraşdırma Yalnız bir binary fayl vasitəsilə işləyir və əlavə komponentlərə ehtiyac yoxdur.
+Geniş tətbiq dəstəyi Təkcə konteynerlərlə deyil, eyni zamanda müxtəlif formatlı proqramlarla işləyə bilir (java, exec, qemu, raw_exec və s.).
+Çox yüksək əlçatanlıq Sistemin bir neçə serverlə işləyə bilməsi onu fasiləsiz xidmətlər üçün ideal edir.
+Fərqli data mərkəzlərində işləmək imkanı Eyni vaxtda bir neçə fiziki və ya bulud mühitində işləyərək genişlənmiş sistemlərə dəstək verir.
+Digər HashiCorp alətləri ilə inteqrasiya Vault ilə təhlükəsiz məlumatların idarəsi, Consul ilə xidmət kəşfi asanlıqla mümkündür.
+Fərqli yerləşdirmə metodları Tətbiqləri risksiz şəkildə yeniləmək üçün rolling, canary, blue-green deployment üsulları mövcuddur.
+Avtomatik sağlamlıq yoxlamaları və miqyaslanma Tətbiqlər monitorinqə açıq olur və sistem onların yüklənməsinə görə ölçüsünü avtomatik dəyişə bilir.
+1.4.2. Job Sintaksisi
+Şəkil  SEQ Şəkil \* ARABIC 1.1 Nümumə Job SintaksisiŞəkil 1.9 Job Sintaksisinin qurulması
+Şəkil  SEQ Şəkil \* ARABIC 1.1 Nümumə Job Sintaksisi
+Job adı olaraq “web-app” təyin olunmuşdur. Bu job altındakı proseslərin nomad UI və CLI-da görünəcək adıdır.
+Datacenter job-un datacenter-i burada təyin olunmuş datacenter-da olan client node-larda işləyəbiləcəyini göstərir.
+Type – job-un type-ını göstərir. Bu service, system və s. ola bilər.
+Group bölməsində job-un grupu, hansı şəbəkə rejimində işləyəcəyi və job-un neçə kopyasının olacağı qeyd olunur.
+Service bölümü, job-un necə qeydiyyatdan keçiriləcəyini qeyd etmək üçündür. Burada hansı port-un açılacağı, job-un sağlamlığının necə və hansı intervallarla yoxlanacağı təyin olunur.
+Task bölümündə task-ın hansı driver-ı istifadə edəcəyi, hansi image-dən istifadə olunacağı və bu image-ə hansı dəyişənlərin veriləcəyi qeyd olunur. Bu bölmədə həmçinin task-a hansı resursların veriləcəyini təyin edirik. Bu resurslar CPU, RAM və yaddaş ola bilər.
+1.4.3. Hazırki Sistemdə Nomad-in İstifadəsi
+Hal hazırda işləyən sistem tək bir başından ibarət olunduğu üçün Nomad burada nəm agent həm də server vəzifələrini birgə yerinə yetirir. Buna baxmayaraq əlavə maşınlardan istifadə etmək lazım gələrsə sistemi asanlıqla həmin maşınlar arasında bərabər paylamaq mümkün olacaq. Bunun üçün yemi maşınlara Nomad – i quraşdırıb digər maşınlarda işləyən Nomad-lər ilə əlaqələndirib, konfigurasiyada cüzi dəyişikliklər etmək kifayətdir. 
+Bu nə üçün vacibdir?
+Əgər sistemdəki maşınlardan biri və ya bir neçəsi hər hansı bir texniki səbəbdən dayanarsa və ya digər maşınlarla əlaqəsi kəsilərsə Nomad bunu dərhal görür və həmin sistemdə işləyən servisləri və task-ları hazırda işləyən digər maşınlara replikasiya edir. Əgər sıradan çıxmış maşında işləyən Nomad lider seçilmişdirsə, lider yenidən təyin olunur. Bu sayədə sistem davamlı olur və mümkün qədər qısamüddətli kəsilmələr yaşanır.
+1.5. Consul
+1.5.1. Consul Haqqında Ümumi Məlumat
+Consul, HashiCorp tərəfindən hazırlanmış və müasir bulud əsaslı sistemlər üçün nəzərdə tutulmuş servis kəşfi, konfiqurasiya idarəetməsi və servislərarası əlaqələrin tənzimlənməsi funksiyalarını yerinə yetirən digər güclü bir alətdir. İnfrastruktur miqyasında çalışan tətbiqlərin bir-biri ilə əlaqə qurmasını, onların mövcudluğunu izləməyi və avtomatik konfiqurasiya yenilənməsini təmin edən çevik bir həll təqdim edir.
+Sadə dillə desək, Consul sistem daxilində olan bütün xidmətlərin harada yerləşdiyini və onların hansı vəziyyətdə olduğunu izləyən bir vasitədir. Bir tətbiq başqa bir tətbiqlə əlaqə qurmaq istədikdə, sabit IP ünvanı və ya əl ilə konfiqurasiya yerinə Consul-a müraciət edir və həmin xidmətin ünvanını və portunu real vaxtda öyrənir. Bu yanaşma dinamik sistemlər üçün xüsusilə vacibdir, çünki konteynerlər və mikroservislər tez-tez yer dəyişir və ya miqyaslanır.
+Bayaq dediyimiz kimi, əgər sistemdəki maşınlardan biri sıradan çıxarsa Nomad o maşındaki tətbiqləri digər maşınlara balanslı şəkildə replikasiya edir. Sistemdəki tətbiqlər bir-biri ilə danışmaq üçün bir-birilərinin ünvanlarını bilməlidirlər (İP və port). Maşınlarn İP ünvanları fərqli olduğundan və Nomad tətbiqləri qaldırarkən onlara dinamik olaraq port verə bildiyindən (əgər konfigurasiyada statik port təyin olunmuyubsa) bir tətbiqin dəqiq ünvanını digər tətbiqlər arasında dəqiqləşdirmək sistemin böyüklüyündən asılı olaraq çox mürəkkəbləşir. Bu vəziyyətdə Consul köməyə çatır. Bəs bu proses necə baş verir?
+Nomad özündə hər tətbiqi qaldırdıqda bunu dərhal Consul-a məlumat olaraq ötürür. Consul bu məlumatları təhlükəsiz formada özündə saxlayır və sadəcə onda düzgün token-lə müraciət edən sorğulara bu məlumatı ötürür. Bu da o deməkdirki, əgər orkestr daxilində bir tətbiq işləyirsə onun məlumatlarını almaq üçün ən düzgün yol Consul-a müraciət etməkdir.
+Bundan əlavə tətbiqlərin sağlam olub olmadıqlarını bilmək üçün də Consul istifadə olunur. Nomad da bir tətbiq qaldırarkən konfiqurasiyada sağlamlığın yoxlanılmasını təyin etmək olur (healt check). Bu yolla tətbiqin hansı şəkildə, hansı sorğularla və hansı intervallarla yoxlanılmasını təyin etmək mümkündür. Əlavə olaraq tətbiq hansı aralıqlarla sorğulara cavab verməsə Consul onun sağlam olmadığını təyin edə biləcəyi interval təyin oluna bilər. Sadə dillə desək, tutaq ki sistemdə “Traefik” işləyir. 
+NoŞəkil  SEQ Şəkil \* ARABIC 2.1 Traefik healt check konfiqurasiyasımad job konfigurasiyasında:
+Şəkil  SEQ Şəkil \* ARABIC 2.1 Traefik healt check konfiqurasiyası
+Şəkil 1.10 Traefik  konfiqurasiyasının qurulması
+Buradan check blokunda görə bilərik ki, Traefik-in sağlamlığının yoxlanılması üçün “admin” portuna hər 5 saniyədən bir http sorğusu göndərilir. Əgər “Traefik” 2 saniyə ərzində bu sorğulara cavab verməsə onun sağlam olmadığı aşkarlanır.
+1.5.2. Consul-un Arxitekturası Necə Qurulub?
+Consul, klaster əsaslı bir sistemdir və üç əsas komponentdən ibarətdir:
+Serverlər – Klasterin əsas idarəediciləridir. Lider seçimi və məlumatların konsensusu bu hissədə baş verir. Adətən 3 və ya 5 serverdən ibarət olur.
+Agentlər – Hər maşında bir agent işləyir və o, həmin node-dakı xidmətləri izləyir və Consul serverlərinə məlumat ötürür.
+Client agentlər – Servisləri qeydiyyata alan və onlarla əlaqəni təşkil edən vasitəçi rolu oynayır.
+1.6. Vault
+1.6.1. Vault və Onun Haqqında Ümumi Məlumat
+Vault, HashiCorp tərəfindən hazırlanmış, sistemlərdə gizli məlumatların (secret-lərin) təhlükəsiz şəkildə saxlanması, idarə olunması və paylanması üçün nəzərdə tutulmuş bir digər əlavə bir vasitədir. Buraya şifrələr, API açarları, verilənlər bazası istifadəçi məlumatları, sertifikatlar və digər həssas məlumatlar daxil edilir və istifadə edilir.
+Vault-un əsas məqsədi sistem daxilində gizli məlumatlara nəzarət olunmuş və izlənə bilən şəkildə çıxış təmin etmək. Bu, insan müdaxiləsini minimuma endirərək avtomatlaşdırmanı təhlükəsiz edir.
+Əsas imkanları:
+•Gizli məlumatların saxlanması və idarəsi: Şifrələr, tokenlər və digər məxfi məlumatlar şifrələnmiş şəkildə saxlanılır və qorunur.
+•Dinamik etimadnamələr (credentials): Vault verilənlər bazası və ya cloud xidmətləri üçün istifadə edildikdə, real vaxtda və müddətli girişlər yarada bilir.
+•Access Control (ACL): Kim hansı gizli məlumata hansı səviyyədə çıxış edə bilər – bunlar tam şəkildə təyin olunur və admin tərəfindən idarə edilə bilir.
+•Audit log-lar: Vault hər çıxış və əməliyyatı qeyd edir, bu da təhlükəsizlik və yoxlama baxımından çox vacibdir. Yəni sistemdəki hər bir istifadəçi, istədiyi bir məlumatı silə, oxuya, dəyişdirə və yeni məlumat əlavə edərsə bu zaman admin tərəfindən bu əməliyyatlar asanlıqla aşkarlana bilər. Bu da sistemin təhlükəsizliyi üçün çox önəmli faktordur.
+•UI – Vault-un özü ilə inteqrasiyası olan istifadəçi üçün nəzərdə tutulmuş interfeysi mövcuddur. Bu sayədə təkcə komandalarla deyil, visual olaraq da Vault-dan istifadə etmək mümkündür.
+1.6.2. Vault və Consul İnteqrasiyası
+Consul, Vault-un storage backend-i və high availability koordinasiyası üçün ən uyğun seçimlərdən biridir.
+Konsulun rolu: 
+Vault öz metadata və secrets-lərini disklərdə deyil, Consul-un KV (key/value) bazasında saxlayır.
+Consul, Vault-un klasterləşdirilməsi və lider seçimi üçün istifadə olunur. Bu, yüksək mövcudluq (HA) təmin edir.
+Vault-un bir neçə instansiyası varsa, onların bir lider ətrafında sinxron işləməsini Consul təmin edir.
+İnteqrasiya necə işləyir?
+Vault-da konfigurasiyada belə bir hissə olur:
+Şəkil 1.11 Vault-Consul ingetrasiyası
+Bu onu göstərir ki, Vault özündə olan məxfi dataları disk və ya hansısa bir yaddaşda deyil, bunları Consul-un bazasında saxlayır.
+1.6.3. Vault və Nomad İnteqrasiyası
+Nomad ilə Vault-un inteqrasiyası sayəsində, tətbiqlərə avtomatik və təhlükəsiz şəkildə gizli məlumatların verilməsi mümkündür. Bu inteqrasiya tətbiqlərin token, parol və sertifikat kimi məlumatlara birbaşa Vault-dan çıxışını təmin edir – həm də heç bir insan müdaxiləsi olmadan.
+Nomad nə zaman Vault-dan istifadə edir?
+Nomad-da işləyən servislərin dinamik olaraq Vault token-ləri alması
+Servislərin işləmə vaxtı bitdikdə həmin tokenlərin avtomatik olaraq ləğv edilməsi
+Template stanza ilə servisin içərisinə parol, sertifikat və ya digər secret-in env dəyişəni və ya fayl olaraq yazılması
+Bu inteqrasiya da tətbiqin konfigurasiyasında aşağıdakı kimi qeyd olunur:
+Şəkil 1.12 Vault-Nomad inteqrasiyası
+Yuxarıdan başa düşə bilərik ki, tətbiq konfigurasiyası içərisində istifadə olunan template vasitəsiylə, Nomad-da işləyən tətbiq Vault-da “db/creds/web” ünvanında yerləşən data-nın “password”hissəsini alır və bunu “secrets\config.hcl” faylının içərisinə yazır. Daha sonra tətbuq buradan bu məlumatı asanlıqla oxuyub istifadə edir.
+1.7. Nomad Daxilində İstifadə Olunan Tətbiqlər
+Hal hazırda sistemdə istifadə olunan tətbiqlərdən bir neçəsi haqqında qısaca məlumat verə bilərik. Bu tətbiqlər Nomad vasitəsilə Docker konteyner içərisində qaldırılıb və Nomad ilə nəzarət edilir. Tətbiqlərin sıralaması: 
+Grafana
+Prometheus
+Loki
+Promtail
+Alertmanager
+Kafka
+Traefik
+Sadalanan ilk 5 tətbiq sistemin monitorinqi üçün istifadə olunub və bir-biriləri ilə inteqrasiyaları mövcuddur.
+1.7.1. Grafana
+Grafana ona verilən mənbələrə əsasən qrafiklər, histoqramlar, diaqramlar yarada bilən açıq mənbəli tətbiqdir. İstifadə qaydası çox sadədir. Məsələn sistemdə “Prometheus” (birazdan danışacağımız) istifadə olunur. Prometheus-un verilənlərini mənbə kimi Grafana-ya ötürüb bu verilənlər əsasında diaqramlar düzəldə bilərik. Bu istifadəçi üçün sistemin monitorinqini çox önəmli ölçüdə sadələşdirir. Tutaq ki, tətbiqlərimizdən biri aldığı datanı verilənlər bazasına yazmaqla məsuliyyət daşıyır. Biz qrafana vasitəsilə bu datanın hansı sürətlə və hansı sayla gəldiyini çox asanlıqla görə bilərik. Nümunə qrafik olaraq:
+Şəkil 1.13 Prometheus data say qrafiki“Şəkil 1.14 Prometheus vaxt qrafikiPassed” və “NotPassed” üzrə gələn dataların sayı
+Şəkil 1.13 Prometheus data say qrafiki
+Şəkil 1.14 Prometheus vaxt qrafiki
+Burada isə hər bir conditiona görə gedən proseslərin sürəti.
+Grafana-da istifadəçilər üçün hesablar yaradıla bilər və bu hesablara verilən hüquqlarla hansı istifadəçinin hansı qrafikləri görə və ya dəyişdirə biləcəyi təyin oluna bilər.
+Grafana susmaya görə datalarını SQLite-da saxlayır. Təbii olaraq bu ünvan dəyişdirilib sistemin əsas verilənlər bazası olaraq təyin oluna bilər.
+1.7.2. Prometheus
+Prometheus Grafana şirkətinə məxsus olan digər bir monitorinq tətbiqidir. O, milyonlarla datanı eyni anda idarə edə biləcək həcmə malikdir. Bu səbəbdə Prometheus bir çox genişmiqyaslı proyektlərdə istifadə olunur. Prometheusun işləmə məntiqi belədir:
+Tutaq ki, sistemin biznes məntiqini yerinə yetirən tətbiqimiz var. Biz bu tətbiq-də istədiyimiz hər hansı bir addımda metrikanı prometheus-a ötürə bilərik və Prometheus bu dataları özündə saxlıyır. Sonra, bu datanı Grafana kimi tətbiqlərdə vizuallaşdırmaq mümkündür.
+Prometheus-un öz sorğu dili “PromQL”-dir. Bu dillə biz hər hansı bir metrikanın istədiyimiz qaydada visuallaşdıra bilərik.
+Nümunə olaraq:
+Sorğu: sum(increase(creditsprovided_count[10m])) by(job)
+Nəticə:
+Şəkil 1.15 Prometheus sorğu nəticəsi
+Bu sorğunu biz insan dili ilə belə oxuya bilərik: “Job” etiketinə görə mənə anlıq olaraq hər 10 dəqiqə üzrə creditsprovided_count metrikasında nə qədər artım olduğunu göstər.
+Biz burada etiket dedikdə, eyni adlı metrikaların daxildəki şaxələnmələrini nəzərdə tuta bilərik. Məsələn, gələn sorğuların sayını özündə saxlayan bir metrikamız olsun və adı “receivedrequests_count”. Gələn sorğuların Http metodları fərqli ola bilər (GET, POST, DELETE, PUT, PATCH). Bu halda etiketdən istifadə edərək istənilən halda gələn sorğuların növünə görə də ayrı ayrılıqda monitor edə bilərik.
+Bundan əlavə prometheus-da rule – yəni qaydalar qoyula bilər. Buna misal olaraq əgər son 10 dəqiqə ərzində gələn sorğuların sayı 100 dən aşağıdırsa o zaman qayda aktivləşsin. Bunu PromQL dilində belə yaza bilərik:sum(increase(requestsreceived_count[10m])) by(method) < 100
+Bu qayda aktivləşdikdə müxtəlif əməliyyatlar həyata keçirə bilərik. Məsələn, bu məlumatı “Alertmanager”-ə (birazdan danışacağıq) ötürüb sistem adminlərini və ya başqalarını cari vəziyyətdən xəbərdar edə bilərik.
+1.7.3. Loki və Promtail
+Bu iki tətbiq sistemdəki log-lara nəzarət etmək üçün istifadə olunur və bir-biriləri ilə davamlı olaraq inteqrasiyada olurlar. İşləmə prinsipləri belədir: Promtail öz konfiqurasiyasına əsasən logların olduğu ünvanlara müraciət edərək onları etiketlərinə görə Loki-ə göndərir. Loki isə bu logları sıralıyır, özünəməxsus soğru dili olan “LogQL” vasitəsi ilə istifadəçiyə göstərir. Promtail tətklikdə mənbə olaraq istifadə oluna bilməz o yalnız datanı Loki-ə ötürməklə məsuliyyət daşıyır. Lakin Loki bu dataları sorğulara əsasən istifadəçiyə rahat olacaq bir şəkildə sıralıyır və vizuallaşdırır. Loki-ni Grafana-da mənbə olaraq istifadə edib logları görə bilərik. Sadə bir LogQL sorğusuna nəzər salaq:
+{job="dataservice"} |= "request received"
+Yuxarıdaki sorğunu insan dili ilə belə ifadə edə bilərik: dataservice job-una aid olan loglar içərisində request received yazısı keçən bütün logları sırala və göstər. Loki bunu vaxta görə azalan sırada sıralıyıb göstərir. LogQL kifayət qədər zəngin sorğu dilidir, bu dillə axtarılan məlumatı çox rahat formada istifadəçiyə uyğun bir şəkildə göstərmək olar.
+1.7.4. Alertmanager
+Alertmanager adından da aydın olduğu kimi “Alert”-ləri xəbərdarlıqları idarə edir. O, fərqli giriş nöqtələrindən sorğular alaraq xəbərdarlıqları öz konfigurasiyasına əsasən Telegram bot vasitəsilə Telegram kanalları və ya individual istifadəçilərə, e-poçt vasitəsilə, webhook vasitəsilə ötürə bilir. İşləmə strukturunu başa düşmək çox asandır. Məsələn, yuxarıda danışıldığı kimi, Prometheus-da olan bir qayda aktivləşir və Alertmanager-ə ötürülür (Son 10 dəqiqə ərzində gələn sorğuların sayı 100 dən azdır). Bu xəbərdarlığı Telegram bot vasitəsilə ötürmək istəyiriksə Alertmanager konfiqurasiyasında bu düzəlişi etmək kifayətdir:
+Şəkil 1.16 Alertmanager konfiqurasiyası
+Buradan göründüyü kimi, gələn xəbərdarlıq Telegram bot-a ötürülür və template istifadə edərək bu məlumatı insan üçün oxunaqlı formada mesaj kimi göndərir. Göndərilən mesaj nümunəsi:
+Şəkil 1.17 Telegram xəbərdarlığı
+Bu sayədə sistemdə çıxan problemlər tezliklə aşkarlanıb həll oluna bilər.
+1.7.5. Traefik
+Traefik, dinamik və avtomatik şəkildə servislərə yönləndirmə edən modern bir HTTP revers proxy və load balancer-dir. Mikroservis arxitekturalarında, xüsusilə Docker, Kubernetes, Nomad kimi mühitlərdə istifadə olunur və servisləri özü avtomatik aşkarlayıb yönləndirə bilir. HTTPS, Let's Encrypt, şəbəkə təhlükəsizliyi və load balancing kimi funksiyaları birbaşa və sadə konfiqurasiya ilə təqdim edir. Buna baxmayaraq sistemdə sertifikat olaraq Cloudflare-in təqdim etdiyi sertifikatdan istifadə olunur və Cloudflare-ilə Traefik inteqrasiya edilib. Bu sayədə sistem kənardan aldığı sorğuları HTTP ilə yox HTTPS ilə alır və bu da məlumatların ötürülməsindəki təhlükəsizliyi yüksək səviyyəyə çıxardır. Hal hazırda sistemin işlədiyi domen agroculture.net dir. Bu ünvana gələn sorğuların strukturundan asılı olaraq Traefik onu içəridə lazım olan ünvana ötürür. Konfiqurasiyadan kiçik bir nümunə:
+Şəkil 1.18 Traefik konfiqurasiyası
+Buradan görünür ki, valut.agroculture.net ünvanına göndərilən sorğular içəridə http:floating_ip:8200 a ötürülür. Floating_ip dəyişəni consuldan KV olaraq alınır.
+1.8. Pipeline
+Pipeline, proqram təminatının hazırlanma mərhələsindən istehsalata (production) qədər keçdiyi bütün addımların ardıcıl və avtomatlaşdırılmış şəkildə icra edildiyi proses zənciridir. Bu zəncir kodun yazılmasından sonra avtomatik olaraq testdən keçirilməsi, yığılması (build), təhlükəsizlik yoxlamaları və nəticədə yerləşdirilməsi (deploy) mərhələlərini əhatə edə bilər.
+Pipeline-lar adətən CI/CD sistemlərinin əsasını təşkil edir. Burada CI (Continuous Integration) – kod dəyişikliklərinin tez-tez birləşdirilməsi və test olunması; CD (Continuous Deployment) isə bu dəyişikliklərin avtomatik şəkildə yerləşdirilməsini ifadə edir.
+Sistemimizdə bu məqsədlə GitHub Actions runner istifadə olunur. Runner, layihədə edilən hər bir dəyişiklikdən sonra təyin olunmuş əməliyyatları avtomatik işə salır – məsələn: kodun keyfiyyət yoxlanışı, testlərin icrası və ya build artefaktlarının yaradılması. Bu yanaşma həm prosesi sürətləndirir, həm də insan səhvlərinin qarşısını alır.
+Ümumilikdə, pipeline-lar proqramın stabil və etibarlı şəkildə yayımlanmasını təmin edir, eyni zamanda komanda daxilində devops mədəniyyətinin qurulmasına kömək edir.
+İşləmə prinsipi belədir:
+Edilmiş dəyişikliklər git vasitəsilə Github-a ötürülür. Burada əsas qol-a (branch) birləşdirildikdən sonra test olunur və server-ə yüklənir. Yükləndikdən sonra faylın nə üçün istifadə olmasından asılı olaraq server daxilində lazımi komandalar işə salınır və dəyişikliklər deploy olunur. Qısa bir nümunə olaraq:
+Şəkil 1.19 Pipeline nümunəsi
+Burada loki.nomad faylının üzərində dəyişiklik edildiyi halda baş verən əməliyyatlar görünür. İlk olaraq yeni fayl “/etc/nomad.d/jobs” qovluğuna kopyalanır sonra isə nomad job run -var="loki-config=/usr/app/storage/volumes/loki/loki-config.yaml" /etc/nomad.d/jobs/loki.nomad  komandası icra olunaraq dəyişiklik tətbiq olunur. Nomad bu komandanı aldıqdan sonra tətbiqin yeni versiyasını qaldırır və köhnəni deaktiv etdiyi anda yenini işə salır. Bu sayədə sistemdə heç bir düşüş qeydə alınmır.
+II FƏSİL. SİSTEM ARXİTEKTURASI VƏ SERVER TƏRƏFİNİN TEXNİKİ REALLAŞDIRILMASI.
+. Ümumi sistem arxitekturası və istifadə olunan texnologiyalar
+Hazırlanan aqrotexniki nəzarət sistemi real vaxt rejimində ətraf mühitdən – o cümlədən torpaq və hava rütubəti, temperatur kimi parametrlərdən – məlumatların toplanması, emalı və vizualizasiyasını təmin edir. Sistemin arxitekturası müasir proqram təminatı prinsiplərinə əsasən modul şəkildə qurulmuşdur. Bu yanaşma sistemin genişləndirilə bilən, miqyaslana bilən və asan saxlanıla bilən olmasına imkan yaradır.
+Sistem əsasən üç əsas komponentdən ibarətdir:
+Sensor tərəfi– fiziki mühitdən məlumatları toplayır.
+Server tərəfi (məlumat emalı və idarəetmə) – məlumatların qəbulunu, saxlanmasını, emalını və digər komponentlərə ötürülməsini həyata keçirir.
+İstifadəçi interfeysi – məlumatların vizualizasiyası və idarə paneli.
+Bu bölmədə server tərəfinin reallaşdırılmasında istifadə olunan əsas texnologiyalar aşağıdakılardır:
+Java & Spring Boot: Sistem server tərəfli tətbiqlərin qurulması üçün Java proqramlaşdırma dili və Spring Boot çərçivəsi əsasında hazırlanmışdır. Spring Boot yüksək məhsuldarlıq, modul struktur və geniş ekosistem dəstəyi təmin edir. RESTful API-lər vasitəsilə müxtəlif modullar arasında əlaqə qurulmuşdur.
+Apache Kafka: Sensorlardan gələn real vaxt məlumatlarının emalı və paylanması məqsədilə Apache Kafka mesajlaşma platformasından istifadə olunmuşdur. Kafka sistemə daxil olan məlumatların gecikməsiz və etibarlı şəkildə ötürülməsinə imkan verir.
+PostgreSQL və MongoDB: Verilənlərin saxlanması üçün həm relasiyalı, həm də sənəd əsaslı məlumat bazalarından istifadə edilmişdir. PostgreSQL əsasən strukturlaşdırılmış məlumatların saxlanılması üçün seçilmişdir, MongoDB isə qeyri-strukturlaşdırılmış və çevik məlumat modelləri üçün istifadə olunmuşdur (məsələn: sensor məlumatlarının tarixçəsi).
+Spring Security və JWT: İstifadəçi identifikasiyası və autentifikasiyası üçün Spring Security kitabxanası tətbiq olunmuş, JWT (JSON Web Token) texnologiyası ilə təhlükəsiz giriş təmin edilmişdir.
+Sistem bu arxitektura əsasında həm daxili məlumat axınlarını effektiv şəkildə idarə edir, həm də istifadəçilərə çevik və real vaxt əsaslı idarəetmə imkanı təqdim edir. Bu texnoloji seçimlər sistemin həm dayanıqlığını, həm də miqyaslana bilmə qabiliyyətini artırır. 
+Java, Sun Microsystems tərəfindən hazırlanmış güclü tipli, ümumi təyinatlı, obyekt yönümlü proqramlaşdırma dilidir. Netflix, AliExpress, Google, Intel, eBay, TripAdvisor və bir çox başqa şirkətlər də daxil olmaqla bir çox şirkətlər tərəfindən istifadə edilən ən tanınmış və populyar dillərdən biridir. 1995-ci ildə təqdim olunduqdan sonra, o, yalnız populyarlıq qazandı, Python ilə birlikdə 2010-cu illərin sonunda lider oldu. Java 2022-ci ilin iyul ayı üçün TIOBE reytinqində üçüncü yerdədir.
+Java Spring Boot mikroservislər və veb proqramlar yaratmaq üçün Java əsaslı platformalardan istifadə etməyi asanlaşdıran açıq mənbə çərçivəsidir. Spring Boot-u müəyyən etmək istəyiriksə, ən populyar və geniş istifadə olunan həllərdən biri olan proqramların hazırlanması üçün inkişaf dili və hesablama platforması olan Java ilə başlamalıyıq. Bütün dünyada tərtibatçılar öz səyahətlərinə Java proqramlaşdırmasını öyrənməklə başlayırlar. Çevik və istifadəsi asan Java mühiti istər sosial şəbəkələr, oyun və veb proqramları, istərsə də şəbəkə və korporativ proqramlar yaratmaqdan asılı olmayaraq tərtibatçılar üçün sevimli vasitədir[1].
+Bu çərçivənin seçimində əsas meyarlar aşağıdakılardır:
+Sadə və sürətli tətbiq qurulması: Spring Boot avtomatik konfiqurasiya və daxili server (Tomcat) dəstəyi ilə layihənin ilkin mərhələlərində funksional nümunələrin tez hazırlanmasına imkan verir.
+Modul əsaslı inkişaf: Sistem müxtəlif funksional modullardan (məsələn: autentifikasiya, sensor məlumatlarının emalı, məlumat bazası idarəetməsi və s.) ibarətdir. Spring Boot bu modulların ayrılıqda idarə olunmasını və test edilməsini asanlaşdırır.
+RESTful API-lərin hazırlanması üçün ideal mühit: İstifadəçi interfeysi və digər komponentlərlə qarşılıqlı əlaqə üçün REST API-lər hazırlanmışdır. Spring MVC və Spring Web modulları bu prosesi sadə və strukturlaşdırılmış şəkildə təşkil edir.
+Spring Security ilə inteqrasiya: İstifadəçi identifikasiyası, rola əsaslanan giriş nəzarəti və JWT ilə autentifikasiya Spring Security vasitəsilə təhlükəsiz və asan şəkildə tətbiq edilmişdir.
+Geniş icma və sənədləşmə: Spring Boot və Java dünya miqyasında geniş istifadə olunduğuna görə, sənədləşmə, dəstək və üçüncü tərəf kitabxanaların inteqrasiyası olduqca zəngindir. Bu, inkişaf prosesi zamanı qarşılaşa biləcək texniki problemlərin daha tez həllini təmin edir.
+Stabil və performanslı iş prinsipi: Java virtual maşın (JVM) üzərində işlədiyinə görə, yüksək performans və yaddaş idarəetməsi ilə real vaxtda emal tələblərinə cavab verir.
+Nəticə etibarilə, Java və Spring Boot texnologiyalarının seçilməsi sistemin həm ilkin qurulması, həm də gələcəkdə genişləndirilməsi və texniki dəstək baxımından ən optimal həll hesab olunur. Bu texnologiyalar sistemin davamlı, miqyaslana bilən və təhlükəsiz şəkildə işləməsini təmin edir.
+Hazırlanan aqrotexniki nəzarət sistemində fərqli təyinatlı məlumatların saxlanması və idarə olunması üçün iki fərqli məlumat bazası texnologiyası – PostgreSQL və MongoDB – istifadə edilmişdir. Bu yanaşma məlumatların təbiətinə uyğun uyğunlaşdırılmış saxlama və emal strategiyası qurmağa imkan verir. Strukturlu və sabit formatlı məlumatlar üçün klassik relyasiyalı bazaya üstünlük verilmiş, dinamik və çevik struktura malik sensor məlumatlarının idarəsi isə sənəd əsaslı verilənlər bazasına həvalə olunmuşdur.
+Sistemin idarəetmə və konfiqurasiya hissəsində, o cümlədən istifadəçi qeydiyyatı, mikrokontroller identifikasiyası və GSM modemlərlə əlaqəli statik məlumatların saxlanmasında PostgreSQL istifadə olunmuşdur. Bu verilənlər bazası məlumatların bütövlüyünü təmin edən ACID prinsiplərinə əsaslanır və mürəkkəb sorğuların icrasına şərait yaradır. Java və Spring Boot platformaları ilə yüksək uyğunluğu, zəngin SQL dəstəyi və geniş sənədləşmə imkanı PostgreSQL-in bu sistem üçün optimal seçim olmasına səbəb olmuşdur. Verilənlərin dəqiqliklə saxlanılması, təhlükəsizliyi və struktur üzərində tam nəzarət imkanı bu texnologiyanın əsas üstünlüklərindəndir[2].
+Şəkil 2.1. Aqrotexniki Nəzarət Sisteminin Verilənlər Bazası Sxemi.
+Şəkil 2.1-də 5 əsas cədvəl var: MicroController, Sensor, SensorType, MicroControllerGSMModem, və SensorCalibrationRecord. Bu cədvəllər arasındakı əlaqələr və onların atributları aşağıdakı kimi təhlil oluna bilər:
+MicroController Cədvəli
+Atributlar: Id, Latitude, Longitude, Altitude, Name, CreatedAt, UpdatedAt, Enabled
+Məqsəd: Bu cədvəl microcontroller-ləri təmsil edir. Hər bir microcontroller coğrafi mövqeyə (Latitude, Longitude, Altitude) malikdir və adı (Name) ilə birlikdə aktiv/pasiv vəziyyəti (Enabled) saxlanılır. CreatedAt və UpdatedAt sahələri isə qeydin yaradılma və yenilənmə tarixlərini göstərir.
+Əlaqələr: 
+Sensor cədvəlinə MicroControllerId ilə bağlıdır (bir microcontroller çoxlu sensorlara sahib ola bilər).
+MicroControllerGSMModem cədvəlinə MicroControllerId ilə bağlıdır (bir microcontroller bir GSM modemi ilə əlaqələndirilə bilər). 
+Sensor Cədvəli
+Atributlar: Id, MicroControllerId, CaliberMin, CaliberMax, Name, TypeId, CreatedAt, UpdatedAt, Enabled
+Məqsəd: Sensorlar microcontroller-lərə bağlıdır və onların kalibrasiya dəyərləri (CaliberMin, CaliberMax) saxlanılır. Sensorun tipi (TypeId) və adı (Name) ilə yanaşı aktivlik vəziyyəti (Enabled) də qeyd olunur.
+Əlaqələr: 
+MicroController cədvəlinə MicroControllerId ilə bağlıdır (çoxlu sensor bir microcontroller-yə aid ola bilər).
+SensorType cədvəlinə TypeId ilə bağlıdır (hər sensorun bir tipi var).
+SensorCalibrationRecord cədvəlinə SensorId ilə bağlıdır (bir sensorun çoxlu kalibrasiya qeydləri ola bilər). 
+SensorType Cədvəli
+Atributlar: Id, Name, CreatedAt, UpdatedAt, Enabled
+Məqsəd: Sensor tiplərini təsnif etmək üçün istifadə olunur (məsələn, temperatur sensoru, rütubət sensoru və s.). Hər bir tipin adı və aktivlik vəziyyəti saxlanılır.
+Əlaqələr: Sensor cədvəli ilə TypeId vasitəsilə əlaqəlidir (bir sensor tipinə çoxlu sensor aid ola bilər). 
+MicroControllerGSMModem Cədvəli
+Atributlar: Id, MicroControllerId, Imei, PhoneNumber, Name, CreatedAt, UpdatedAt, Enabled
+Məqsəd: Microcontroller-lərə qoşulan GSM modemləri təmsil edir. Hər bir modemin IMEI nömrəsi, telefon nömrəsi və adı saxlanılır.
+Əlaqələr: MicroController cədvəlinə MicroControllerId ilə bağlıdır (bir microcontroller bir GSM modeminə sahib ola bilər). 
+SensorCalibrationRecord Cədvəli
+Atributlar: Id, SensorId, OldCaliberMin, OldCaliberMax, NewCaliberMin, NewCaliberMax, CreatedAt, UpdatedAt, Enabled
+Məqsəd: Sensorların kalibrasiya tarixçəsini saxlayır. Hər bir qeyd sensorun köhnə (OldCaliberMin, OldCaliberMax) və yeni (NewCaliberMin, NewCaliberMax) kalibrasiya dəyərlərini ehtiva edir.
+Əlaqələr: Sensor cədvəlinə SensorId ilə bağlıdır (bir sensorun çoxlu kalibrasiya qeydləri ola bilər).
+Digər tərəfdən, sensorlardan daxil olan məlumatların xarakteri tamamilə fərqlidir. Bu məlumatlar yüksək tezliklə ötürülür, həcmi sürətlə artır və bəzən strukturu dəyişkən ola bilər. Bu səbəbdən, bu cür dinamik verilənlərin idarəsi üçün MongoDB istifadə edilmişdir. Sensorlardan real vaxt rejimində daxil olan məlumatlar sistemdə davamlı və fasiləsiz şəkildə axan informasiya forması — yəni stream (axın) məlumatları — şəklində təmsil olunur. Bu cür məlumatların emalı və saxlanması üçün ənənəvi relyasiyalı verilənlər bazaları – məsələn, PostgreSQL – bəzi hallarda yetərincə çevik olmaya bilər. Məlumat strukturunun daim dəyişə bilməsi, qeydlərin böyük tezliklə daxil olması və saxlanacaq məlumatın zamanla massiv həcm alması bu sahədə qeyri-relyasiyalı (NoSQL) həllərə üstünlük verilməsini zəruri edir. 
+MongoDB bu xüsusda əhəmiyyətli üstünlüklərə malikdir. Onun əsas xüsusiyyəti sənəd əsaslı modelə (document-based model) əsaslanmasıdır. Bu model daxil olan hər bir sensor məlumatını ayrıca JSON sənədi kimi saxlamağa imkan verir və məlumatın strukturuna əvvəlcədən sərt tələblər qoymur. Bu isə müxtəlif növ sensorların (məsələn, hava temperaturu, torpaq rütubəti və ya atmosfer təzyiqi ölçən cihazların) göndərdiyi məlumatların bir-birindən fərqli struktura malik olmasına baxmayaraq eyni bazada problemsiz saxlanmasını mümkün edir.
+Əlavə olaraq, MongoDB yüksək yazma sürətinə malikdir və bu xüsusiyyət axın məlumatları üçün kritik əhəmiyyət daşıyır. Relyasiyalı sistemlərdə hər yazma əməliyyatı əvvəlcədən müəyyən edilmiş sxemə əsaslandığı və kompleks indeksləşdirmə tələb etdiyi üçün performans azalması müşahidə oluna bilər. MongoDB isə sxemsiz model təklif etdiyi üçün bu cür sərt məhdudiyyətlər yoxdur və bu, sistemin daha çevik və yüngül şəkildə işləməsinə imkan verir.
+Stream məlumatları adətən zaman seriyası (time series) şəklində saxlanılır. MongoDB bu sahədə də geniş imkanlar təqdim edir. Sənədlərin zaman damğası ilə qeyd olunması və zaman üzrə indeksləşdirmə funksiyaları vasitəsilə sistemdəki məlumatlar sonradan təhlil, vizualizasiya və süni intellekt modelləri üçün rahatlıqla əldə edilə bilir. Bundan başqa, MongoDB 5.0 versiyasından etibarən rəsmi Time Series Collections adlı funksionallıq təqdim etmişdir ki, bu da zaman əsaslı məlumatların daha effektiv saxlanmasını və sorğularla çıxarılmasını mümkün edir.
+Bütün bu səbəblərlə, real vaxt rejimində işləyən, məlumatların fasiləsiz axdığı və sensor mənbələrinin müxtəlif olduğu aqrotexniki sistemlərdə MongoDB, relyasiyalı verilənlər bazalarına nisbətən daha uyğun və optimal seçim sayılır. Onun çevik məlumat modeli, yüksək performansı və zaman seriyalı məlumatlara uyğunlaşa bilməsi sistemin ümumi məhsuldarlığını artırır və uzunmüddətli saxlanma tələblərinə cavab verir[3].
+2.2. Məlumat axınının idarə edilməsi
+Aqrotexniki sistemlərdə məlumat axınının idarə edilməsi üçün müxtəlif texnologiyalar mövcuddur. Bu texnologiyaların hər birinin öz üstünlükləri və çatışmazlıqları var. Bu bölmədə, sistem üçün ən uyğun texnologiyanın seçilməsi prosesi və Apache Kafka-nın niyə ideal seçim olduğu müzakirə olunacaq.
+ Məlumat axınının idarə edilməsi üçün ən geniş yayılmış texnologiyalara aşağıdakılar daxildir:
+Apache Kafka: Real-time məlumat axını üçün yüksək məhsuldarlıq və miqyaslanabilirlik təqdim edir. 
+RabbitMQ: Message Queue əsaslı yanaşma ilə məlumatların növbə əsasında emal edilməsini təmin edir. 
+AWS Kinesis: Bulud əsaslı məlumat axını idarəetmə sistemi olaraq geniş miqyaslı məlumat emalı üçün uyğundur. 
+Bərpa olunan enerji mənbələrindən istifadənin normativ tənzimlənməsi
+Hər bir texnologiyanın öz xüsusiyyətləri var. Məsələn, RabbitMQ sadə və asan qurulumu ilə seçilir, lakin real-time məlumat axını üçün Apache Kafka daha effektivdir. AWS Kinesis isə bulud əsaslı həllər üçün uyğundur, lakin yerli sistemlər üçün Apache Kafka daha çevikdir.
+Şəkil 2.2. Apache Kafka və RabbitMQ arasında əsas fərqlər.
+Aqrotexniki sistemlərdə məlumat axınının idarə edilməsi üçün Apache Kafka-nın seçilməsinin əsas səbəbləri aşağıdakılardır:
+Real-time Məlumat Emalı: Apache Kafka, məlumatların real-time şəkildə emal edilməsini təmin edir. Bu, aqrotexniki sistemlərdə sensor məlu-matlarının dərhal emal edilməsi üçün vacibdir.
+Sensor Məlumatlarının Real-time Emalı: Aqrotexniki sistemlərdə sensor məlumatlarının real-time şəkildə emal edilməsi üçün Kafka ideal seçim-dir.
+Geniş Miqyaslı Məlumat Axını: Kafka, geniş miqyaslı məlumat axınlarını idarə etmək qabiliyyətinə malikdir.
+Resursların Optimal İstifadəsi: Kafka, sistem resurslarının optimal isti-fadəsini təmin edərək məlumat axınının effektiv idarə edilməsini təmin edir[4].
+Apache Kafka: Əsas Konseptlər və Arxitektura
+Apache Kafka, real-time məlumat axınının idarə edilməsi üçün geniş yayılmış bir texnologiyadır. Bu bölmədə, Kafka-nın əsas komponentləri, arxitekturası və iş prinsipləri ətraflı şəkildə təqdim olunur. Bu məlumat, Kafka-nın aqrotexniki sistemlərdə necə tətbiq ediləcəyini daha yaxşı başa düşmək üçün əsas təqdim edir.
+Kafka-nın əsas komponentləri aşağıdakılardır:
+Producer: Məlumatları Kafka-ya göndərən tətbiq və ya sistem. Məsələn, aqrotexniki sistemlərdə sensor məlumatları Producer vasitəsilə Kafka-ya göndərilir.
+Consumer: Kafka-dan məlumatları oxuyan tətbiq və ya sistem. Məsələn, məlumatların analizi üçün Consumer istifadə olunur.
+Topic: Məlumatların kateqoriyalara bölündüyü məntiqi qruplar. Hər bir Topic, müxtəlif Producer və Consumer-lər tərəfindən istifadə oluna bilər.
+Broker: Kafka qovşaqları (nodes). Hər bir Broker, məlumatların saxlanılması və idarə edilməsindən məsuldur.
+Partition: Topic-lərin alt bölmələri. Hər bir Partition, məlumatların paralel şəkildə emal edilməsini təmin edir.
+Zookeeper: Kafka klasterinin idarə edilməsindən məsuldur. Broker-lərin koordinasiyası və konfiqurasiyası Zookeeper tərəfindən həyata keçirilir.
+Şəkil 2.3. Kafka-nın arxitekturası.
+Kafka-nın arxitekturası, onun yüksək miqyaslanabilirliyini, etibarlılığını və davamlılığını təmin edən bir neçə əsas prinsipə əsaslanır. Hazırda layihəmizdə Kafka bu prinsiplər əsasında tətbiq olunur və bu, onun daha effektiv işləməsini təmin edir. İlk növbədə, Kafka bir neçə Broker-dən ibarət bir klaster şəklində fəaliyyət göstərir. Bu arxitektura, sistemin yüksək miqyaslanabilirliyini və etibarlılığını təmin edir. Məlumatların itirilməməsi üçün Kafka, hər bir Partition-u bir neçə Broker üzərində replikasiya edir, beləliklə məlumatlar hər zaman mövcud olur və hər hansı bir nasazlıq halında itirilmir. Kafka-nın miqyaslana bilən strukturu, yeni Broker-lərin əlavə edilməsi ilə asanlıqla böyüməyə imkan verir və bu, məlumat axınının artması ilə əlaqədar qarşılaşılan problemləri effektiv şəkildə həll edir. Eyni zamanda, Kafka-nın fault tolerance xüsusiyyəti, sistemin bir Broker-in uğursuzluğuna qarşı davamlılığını təmin edir. Bu, hər hansı bir nasazlıq baş verdikdə belə, sistemin fasiləsiz işləməsini təmin edir və yüksək etibarlılığını qoruyur. Bu xüsusiyyətlər, Kafka-nın bizim layihədəki istifadəsini daha da gücləndirir və gələcəkdə artan tələbləri qarşılamasına imkan verir[5].
+Kafka-nın iş prinsipləri aşağıdakı kimi təqdim olunur:
+Publish/Subscribe Model: Producer-lər məlumatları müəyyən bir Topic-ə göndərir, Consumer-lər isə bu Topic-dən məlumatları oxuyur.
+Message Retention: Kafka, məlumatları müəyyən müddət saxlayır. Bu, məlumatların təkrar emal edilməsinə imkan yaradır.
+Load Balancing: Kafka, məlumatların bərabər paylanması üçün Partition-lar arasında yük balansını təmin edir.
+High Throughput: Kafka, yüksək məhsuldarlıqla məlumatları emal edir. Bu, real-time məlumat axını üçün vacibdir. 
+Şəkil 1.4. Kafka anlayışları(topic və partition).
+Apache Kafka İlə Məlumat Axınının İdarə Edilməsinin Tətbiqi
+Apache Kafka, aqrotexniki sistemlərdə məlumat axınının real vaxt rejimində idarə olunmasını təmin edən və bu sahədə performans, etibarlılıq, həmçinin resursların səmərəli istifadəsi baxımından mühüm rol oynayan bir mesajlaşma platformasıdır. Bu texnologiya vasitəsilə müxtəlif mənbələrdən gələn sensor məlumatları ardıcıl və çevik şəkildə emal olunur, sistem komponentləri arasında asinxron əlaqə qurulur və məlumatın sürətli ötürülməsi təmin edilir. Kafka-nın tətbiqi aqrotexniki nəzarət sistemlərində dayanıqlılığı artırır, məlumat axınlarını şkalalana bilən şəkildə idarə etməyə imkan yaradır və ümumi sistem arxitekturasının funksional effektivliyini yüksəldir[6].
+Aqrotexniki sistemlərdə Kafka-nın tətbiqi aşağıdakı əsas mərhələlərdən ibarətdir:
+Sensor Məlumatlarının Toplanması: Sensorlar vasitəsilə toplanan məlumatlar (məsələn, hava şəraiti, torpaq rütubəti, temperatur) Kafka Producer-lər vasitəsilə Kafka-ya göndərilir. 
+Şəkil 1.5. Sensor məlumatlarının göndərilməsi.
+Məlumatların Kafka-da Saxlanılması: Göndərilən məlumatlar müvafiq Topic-lərə yazılır və Partition-lar vasitəsilə idarə olunur. 
+Şəkil 2.6. Yeni topic-in yaradılması.
+Məlumatların Real-time Emalı: Consumer-lər vasitəsilə məlumatlar real-time şəkildə oxunur və analiz edilir. Məsələn, hava şəraiti məlumatları əsasında suvarma sistemləri idarə edilir. 
+Şəkil 2.7. Sensor məlumatlarının əldə edilməsi.
+Məlumatların Analizi və Təhlili: Kafka-dan alınan məlumatlar analiz edilərək kənd təsərrüfatı fəaliyyətləri üçün optimal qərarlar qəbul edilir.
+Hazırda layihəmizdə Kafka-nın aqrotexniki sistemlərə tətbiqi ilə bağlı əldə etdiyimiz nəticələr göstərir ki, bu texnologiya məlumat axınlarını daha sürətli və effektiv şəkildə emal etməyə imkan yaradır. 
+2.3. İstifadəçi İdentifikasiyası və API Təhlükəsizliyi
+Müasir informasiya sistemlərində, xüsusilə də real vaxt rejimində çalışan və çoxsaylı istifadəçi və cihazla qarşılıqlı əlaqədə olan tətbiqlərdə, təhlükəsizlik və identifikasiya mexanizmləri əsas komponentlərdən birini təşkil edir. Aqrotexniki nəzarət sistemində istifadəçilərin və IoT cihazların sistemə təhlükəsiz şəkildə daxil olması və yalnız icazə verilmiş funksionallıqlardan istifadə edə bilməsi üçün müasir autentifikasiya və avtorizasiya texnologiyalarının tətbiqi zəruri olmuşdur. Bu məqsədlə istifadəçilərin şəxsiyyətinin təsdiqi üçün təhlükəsiz identifikasiya alqoritmləri və API-lərin qorunması üçün token əsaslı təhlükəsizlik modelləri inteqrasiya edilmişdir.
+Sistemdə autentifikasiya prosesi JWT (JSON Web Token) texnologiyası əsasında qurulmuşdur. Bu texnologiya istifadəçiyə giriş zamanı server tərəfindən imzalanmış bir token təqdim edir. Token daxilində istifadəçiyə dair identifikasiya məlumatları (ID, rol və s.) kodlaşdırılmış formada yerləşdirilir. Token sonrakı sorğularda istifadə olunduqda, sistem onu yoxlayaraq istifadəçinin kimliyini təsdiq edir və sorğunu icra edir. Bu model serverdə sessiyanın saxlanılmasını tələb etmir, beləliklə, sistem daha yüngül və miqyaslana bilən olur.
+Sistemdə rola əsaslanan avtorizasiya da həyata keçirilmişdir. Məsələn, adi istifadəçilər yalnız məlumatları görüntüləyə bilərkən, administrator hüquqlarına malik istifadəçilər məlumatlarda dəyişiklik edə və ya yeni qurğular qeydiyyatdan keçirə bilirlər. Bu funksiya @PreAuthorize, @Secured və digər Spring Security annotasiyaları vasitəsilə tətbiq edilmişdir.
+API-lərin qorunması üçün standart təhlükəsizlik risklərinə qarşı müdafiə tədbirləri də görülmüşdür. Məsələn:
+SQL Injection hücumlarının qarşısı ORM texnologiyası (Spring Data) ilə alınır;
+Cross-Site Request Forgery (CSRF) müdafiəsi aktiv edilir;
+Tokenlər server tərəfində dəyişdirilə bilməz və yalnız server tərəfindən imzalanır (HS256 və ya RS256 şifrələmə alqoritmləri);
+Şəkil 2.8. Sistem Təhlükəsizlik Konfigurasiyası.
+Sessiyasız Təhlükəsizlik (Stateless Session Management)
+Kodda http.sessionManagement().sessionCreationPolicy(SessionCreationPolicy.STATELESS) istifadə edilib. Bu, tətbiqin sessiyasız (stateless) işləməsi üçün konfigurasiya edir ki, bu da tipik olaraq token əsaslı autentifikasiya (məsələn, JWT) ilə işləyən sistemlər üçün uyğundur.
+Üstünlüyü: Sessiyasız sistemlər server tərəfində sessiya idarəetməsi ehtiyacını aradan qaldırır, bu da xüsusi olaraq IoT cihazlarının (məsələn, mikro nəzarətçilərin) məlumatlarının uzaqdan işlənməsi üçün təhlükəsiz və yüngül bir yanaşmadır.
+Mənfi cəhəti: Stateless sistemlər token-lərin müdafiəsi üçün güclü şifrələməyə və müddət müəyyənləşdirməyə ehtiyac duyur. 
+Kodda JwtAuthRequestFilter adlı xüsusi bir filtr əlavə edilib ki, bu standart UsernamePasswordAuthenticationFilter-in əvvəlində işləyir. Bu, JWT (JSON Web Token) əsaslı autentifikasiyanın istifadə olunduğunu göstərir.
+Üstünlüyü: JWT, mikro nəzarətçilər və sensorlardan gələn məlumatların təhlükəsiz şəkildə serverə ötürülməsi üçün uyğundur. Token-lər ilə autentifikasiya, sessiya idarəetməsinə ehtiyac olmadan skalyar və təhlükəsiz bir həll yolu təqdim edir.
+Mənfi cəhəti: JWT-lərin müdafiəsi üçün xüsusi diqqət tələb olunur. Əgər token-lər düzgün şifrələnməsə və ya müddəti müəyyənləşdirilməsə, onlar aşkar edilə və ya yenidən istifadə edilə bilər. Əlavə olaraq, token-lərin yenilənməsi (refresh token) mexanizmi olmalıdır.
+2.4. Aqrotexniki Nəzarət Sistemlərində Veb Texnologiyaların Rolu
+Müasir dövrdə kənd təsərrüfatında rəqəmsallaşmanın rolu sürətlə artır. Aqrotexniki əsaslı nəzarət sistemlərinin qurulması və avtomatlaşdırılması, bitkiçilikdə məhsuldarlığın artırılması və resursların səmərəli istifadəsi baxımından əhəmiyyətli addımlardan biridir. Bu tip sistemlərin effektiv şəkildə işləməsi üçün yalnız dataların toplanması kifayət deyil, həm də bu məlumatların istifadəçiyə intuitiv və funksional şəkildə çatdırılması vacibdir. Bu baxımdan frontend hissənin düzgün və müasir texnologiyalarla qurulması sistemin əsas komponentlərindən biri sayılır. Hazırladığımız veb interfeys vasitəsilə istifadəçilər sistemə daxil olaraq gündəlik, aylıq və illik sensor məlumatlarını analiz edə , bu məlumatları qrafiklər üzərindən izləyərək canlı müşahidələr apara bilərlər.
+Hazırlamış olduğumuz veb platforma aşağıdakı əsas funksiyalardan ibarətdir:
+Gündəlik, aylıq və illik məlumatların vizual analizi - İstifadəçilər sistemə daxil olduqdan sonra istədikləri zaman aralığını seçərək, temperatur, torpaq nəmliliyi, havadakı rütubət kimi sensor məlumatlarını qrafik və statistik formada izləyə bilirlər. Bu funksionallıq vasitəsilə istifadəçilər uzunmüddətli tendensiyaları və dəyişiklikləri analiz edə bilirlər;
+Canlı monitorinq - Sistem canlı (real-time) məlumat ötürülməsi ilə təchiz olunub. İstifadəçilər istənilən anda sahədəki vəziyyəti canlı olaraq izləyə bilərlər. Bu müşahidəyə torpaq temperaturu, nəmlik dərəcəsi və havanın göstəriciləri daxildir. Belə bir funksionallıq əkin sahələrində baş verən dəyişikliklərin dərhal izləməyə və operativ qərarların verilməsi baxımından olduqca faydalıdır;
+İnteraktiv istifadəçi interfeysi - İstifadəçi dostu və mobil (responsive) dizayn sayəsində həm peşəkar, həm də qeyri-peşəkar istifadəçilər rahatlıqla sistemdən istifadə edə bilirlər. Sadələşdirilmiş naviqasiya və vizual izahlar xüsusilə texnologya bilikləri zəif olan istifadəçilər üçün əlverişli şərait yaradır;
+Vizual bildirişlər və xəbərdarlıq sistemi: Sensor məlumatları kritik həddə çatdıqda, sistem istifadəçini xəbərdar edir. Bu xüsusiyyət potensial təhlükəli vəziyyətlərin vaxtında qarşısını almağa kömək edir;
+Bu fəsildə sistemin frontend tərəfinin inkişafı, tətbiq olunan texnologiyalar, arxitektura və istifadəçi interfeysi dizaynı geniş şəkildə izahı veriləcək.
+2.5. Frontend Arxitekturasının Ümumi Quruluşu və Sistemlərarası İnteqrasiyanın təmin olunması
+Hazırlanan aqrotexniki nəzarət sistemi bir neçə texnoloji təbəqədən ibarətdir. Sensorlardan alınan məlumatlar Kafka üzərindən ötürülür, backend tərəfindən emal olunur və REST API vasitəsilə frontend-ə çatdırılır. Frontend bu dataları vizual və funksional formatda istifadəçiyə təqdim edir.
+Şəkil 2.9 Layihənin Strukturu.
+Frontend arxitekturası aşağıdakı əsas komponentlərə bölünür:
+Next.js (React Framework)
+TypeScript (Statik tip yoxlaması üçün)
+ShadCn Uİ (UI konponentləri üçün)
+i18 (dil dəstəyi üçün)
+Auth0 (sistemə daxil olma və çıxma əməliyyatlarının təmini üçün)
+Tailwind CSS (UI üçün)
+Chart.js və ya Recharts (vizualizasiya üçün)
+Axios (API çağırışları üçün)
+SWR və ya React Query (data fetching və caching üçün)
+Socket.IO (real-time data üçün, əgər canlı data göstərilməsi tələb olunursa)
+    
+Şəkil 2.10 Frontend arxitekturası üçün seçilmiş texnologiyalar.
+2.6. Frontend Texnologiyaların Seçimi və Layihədə istifadəsi
+Veb interfeysin hazırlanması zamanı uyğun texnologiyaların seçilməsi layihənin uğuruna birbaşa təsir edən mühüm mərhələdir. Seçim prosesi normalda istifadəçi təcrübəsinin keyfiyyəti, sistemin performansı, genişlənmə qabiliyyəti və təhlükəsizliyi kimi aspektləri nəzərə alaraq həyata keçirilir. Aqrotexniki nəzarət sistemlərinin hazırlanması üçün real vaxt rejimində işləməsi, sensor məlumatlarının vizuallaşdırılması və çoxdilli dəstək kimi tələbləri mövcuddur. Buna görə də bu texnologiyaların seçimi müəyyən tələblərə cavab verməli və layihənin gələcəkdə asanlıqla inkişaf etdirilməsinə imkan yaratmalıdır.
+Bu hissədə, istifadə olunan əsas frontend texnologiyaları və onların layihənin məqsədlərinə uyğunluğu təhlil edilib, həmçinin seçimin səbəbləri və üstünlükləri geniş şəkildə izah olunacaqdır. 
+2.6.1 Next.js Framework-ünün İstifadəsi və Əsas Xüsusiyyətləri
+Next.js, React kitabxanası üzərində yazılmış, server-side rendering (SSR) və statik sayt generasiyası (SSG) imkanlarını birləşdirən müasir frontend framework-dur. Bu framework veb tətbiqlərin performansını artırmaq, SEO göstəricilərini yaxşılaşdırmaq və istifadəçi təcrübəsini yüksəltmək məqsədilə geniş istifadə olunur. Next.js-in arxitekturası, həm server tərəfində, həm də müştəri tərəfində kodun işləməsini effektiv idarə etməyə imkan verir ki, bu da xüsusilə dinamik və böyük miqyaslı tətbiqlər üçün əhəmiyyətlidir. 
+Aqrotexniki nəzarət sistemində Next.js-in seçilməsi bir neçə əsas üstünlüyə malikdir. Əvvəla, SSR funksionallığı istifadəçilərə səhifələrin sürətli yüklənməsini təmin edir və axtarış motorları üçün optimallaşdırmanı asanlaşdırır. Bu, sensor məlumatlarının real vaxtda və effektiv şəkildə təqdim olunması üçün vacibdir.
+İkincisi, statik sayt generasiyası ilə tez-tez dəyişməyən səhifələr əvvəlcədən yaradılaraq server yükü azalır və cavab sürəti artırılır.Bundan başqa, Next.js avtomatik kod bölünməsi (code splitting) vasitəsilə tətbiqin yalnız lazım olan hissələrinin yüklənməsini təmin edir ki, bu da veb interfeysin performansını optimallaşdırır. Framework, həmçinin faydalı routing sistemi, API routeları və inteqrasiya olunmuş data fetching metodları ilə inkişaf prosesini sadələşdirir.Next.js-in geniş ekosistemi və aktiv community-i mövcuddur ki, bu da layihənin gələcəkdə texnoloji yeniliklərə uyğun şəkildə inkişaf etdirilməsinə və yeni funksionallıqların əlavə edilməsinə şərait yaradır.
+Next.js-in Üstünlükləri
+Performans və SEO - SSR və SSG vasitəsilə səhifələrin sürətli yüklənməsi və axtarış motorlarında yüksək reytinq təmin olunur.
+Çoxfunksiyalılıq -  SSR, CSR, SSG və ISR kimi müxtəlif render növlərini bir layihə daxilində qarışdırmaq mümkündür.
+Avtomatik Kod Bölünməsi - İstifadəçinin yalnız lazım olan modulları yükləməsi sayəsində yüklənmə vaxtı azalır.
+Asan Routing Sistemi - Fayl əsaslı routing ilə yeni səhifələrin yaradılması sadələşdirilir.
+API Routelarının Dəstəyi - Backend funksiyalarını Next.js layihəsi daxilində asanlıqla qurmaq mümkündür.
+TypeScript Dəstəyi - Statik tip yoxlaması layihənin etibarlılığını və inkişaf sürətini artırır.
+Geniş Ekosistem və Community- Böyük istifadəçi bazası və zəngin resurslar inkişaf prosesini asanlaşdırır.
+Nəticə olaraq, Next.js aqrotexniki nəzarət sisteminin frontend hissəsində yüksək performans, etibarlılıq və rahat genişlənmə imkanları təmin edən ən optimal texnologiyalardan biri kimi seçilmişdir.
+Şəkil 2.11 Layihənin Next Js Strukturu.
+Layihəni Next Js çərçivəsində yazdıqda müəyyən qovluqlarla işləməli oluruq. Şəkil 5.3 də qeyd edildiyi kimi. Onların açıqlamasını verək.
+app/ qovluğu - Next.js 13 və daha yeni versiyalarda tətbiq olunan App Router konsepsiyası müəyyən edilmiş qovluq strukturu üzərindən həyata keçirilir. Burada hər bir alt qovluq URL ünvanlanmasını əks etdirir və onun daxilində yerləşən layout.tsx, page.tsx, loading.tsx kimi fayllar komponent əsaslı yönləndirmə mexanizmini formalaşdırır. Bu metod komponentlərin yenidən istifadəsini və paralel layout sistemlərinin qurulmasını daha səmərəli edir.
+components/ qovluğu - Tətbiqdə vizual elementlərin və UI komponentlərinin saxlandığı əsas qovluqdur. Buraya Button, Navbar, Modal, Card və digər təkrar istifadə olunan komponentlər daxildir. Bu arxitektura dizayn prinsiplərinə uyğun olaraq, reusable və atomik komponentlərin təşkili baxımından əhəmiyyətlidir.
+config/ qovluğu - Layihəyə aid konfiqurasiya faylları burada toplanır. Məsələn, tətbiqin API endpoint-ləri, tema konfiqurasiyası, environment dəyişkənləri və s. kimi mərkəzləşdirilmiş konfiqurasiya mənbələri burada saxlanılır. Bu, kod bazasının idarə olunmasını və dəyişikliklərin sistematik şəkildə aparılmasını asanlaşdırır.
+2.6.2 Qrafik Vizualizasiyası: Məlumatların Görsəlləşdirilməsi Üçün Recharts və Chart.js-dən İstifadə
+Müasir veb tətbiqlərində istifadəçi məlumatlarının daha intuitiv və anlaşılır formada təqdim olunması məqsədilə vizual analitika komponentləri geniş tətbiq olunur. Vizualizasiya, xüsusilə aqrotexniki və ya monitorinq yönümlü sistemlərdə statistik təhlil, real vaxt göstəriciləri və qərarvermə proseslərini dəstəkləmək üçün mühüm alət hesab olunur.
+Recharts Kitabxanası
+Recharts, komponent əsaslı işlədiyi üçün React tətbiqləri ilə problemsiz şəkildə inteqrasiya olunur. Onun əsas üstünlüyü – minimal kodla tez nəticə əldə etməkdir. Dashboard tipli, yüngül qrafiklər üçün idealdır. 
+Şəkil 2.12 Layihədə istifadəsi.
+Recharts ilə sütun qrafiki, sahə (area) qrafiki, radar, pie və s. növlər də rahatlıqla qurulur. Həmçinin, responsiv konteynerləri sayəsində mobil uyğunluq da təmin olunur.
+Chart.js Kitabxanası: Klassik və çox yönlü qrafik vizualizatoru
+Chart.js uzun müddətdir istifadə olunan, etibarlı və çevik bir qrafik kitabxanasıdır. 
+Tətbiqdə Chart.js əsasən daha interaktiv və vizual cəhətdən fərqlilik tələb olunan qrafiklər üçün istifadə olunub. Məsələn, məhsuldarlıq səviyyələrinin il ərzində dəyişməsini göstərən xətti qrafik, və ya fərqli bölgələr üzrə müqayisəli məlumatların göstərilməsi üçün sütun və doughnut tipli qrafiklər qurulub.
+Şəkil 2.13 Layihədə istifadəsi.
+Özəllik
+Recharts
+Chart.js
+React uyğunluğu
+Native komponentlər
+Wrapper (react-chartjs-2)
+Qrafik növləri
+Standart (line, bar, pie və s.)
+Daha geniş (radar, bubble...)
+Performans
+Orta-Yüksək
+Orta
+Konfiqurasiya
+Sadə və istifadəyə hazır
+Daha detallı
+Əsas üstünlük
+Tez nəticə, dashboard üçün ideal
+Vizual zənginlik və kontrol
+Cədvəl İki Kitabxananın Müqayisəli Yanaşması:
+2.7. İstifadəçi İnterfeysi və UX Dizayn
+Hazırlanan sistemin interfeysi kənd təsərrüfatı sahəsində çalışan, texnologiya bilikləri məhdud olan istifadəçiləri də nəzərə alaraq dizayn edilmişdir. İstifadəçi rahatlığı və sadə naviqasiya əsas götürülmüşdür.
+Əsas bölmələr:
+Dashboard – Real-time temperatur, nəmlik və digər sensor məlumatlarının qrafik və statistik görünüşü
+Mikrokontrollerlər– Sahədə olan mikro kontroller cihazlarının əlavə edilməsi üçün bölmə
+Sensorlar – Mikro kontrollerlərə bağlı sensorların listi və onların dəyərləri
+Bildiriş Sistemi – Kritik dəyərlər aşdıqda xəbərdarlıq.
+Bu bölmədə sadalanan interfeys komponentlərinin funksional imkanlarını daha dərindən təhlil etmək məqsədilə, veb interfeysdə yer alan hər bir səhifəyə dair ətraflı izahlar növbəti alt bölmədə təqdim olunacaq.
+İdarəetmə Paneli: Əsas Statistikalar və Mikrokontrollerlərin Monitorinqi
+Şəkil 2.14 İdarəetmə panelinin görüntüsü.
+İdarəetmə paneli (dashboard), istifadəçiyə sahədə quraşdırılmış qurğular və onların fəaliyyət göstəriciləri barədə real vaxt rejimində operativ və vizual məlumat təqdim edən əsas səhifədir.
+İdarəetmə panelində yerləşdirilən məlumat blokları kənd təsərrüfatı texnologiyalarından gündəlik istifadə edən və texniki bilikləri məhdud olan şəxslərin belə rahatlıqla mənimsəyə biləcəyi vizual dil üzərində qurulmuşdur.
+Panelin sol hissəsində yerləşdirilmiş menyu vasitəsilə istifadəçi sistemin digər bölmələrinə asanlıqla keçid edə bilir.
+Əsas Statistik Vizual Bloklar - Panelin yuxarı hissəsində yerləşdirilən üç statistik blok vasitəsilə aşağıdakı məlumatlar vizuallaşdırılır:
+Mikro Kontrollerlərin sayı
+Sensorların ümumi sayı
+Sensor tiplərinin sayı
+Hər bir göstərici interaktiv bar qrafik şəklində təqdim olunur ki, bu da sadəcə rəqəmləri deyil, həm də onların dəyişkənliyini dinamik formada izləməyə imkan verir. Bu vizualizasiya üsulu rechart.js kitabxanası vasitəsilə həyata keçirilmiş və istənilən ekran ölçüsünə uyğunlaşa biləcək şəkildə optimallaşdırılmışdır. Nəticədə istifadəçi sistemin struktur baxımından ümumi vəziyyətini qısa müddət ərzində dərk edə bilir.
+Mikro Kontrollerlər üzrə Analitik Göstəricilər
+Panelin sağ hissəsində yerləşən və radar tipli qrafik üzərində qurulmuş “Mikrokontrollerlər” bölməsi isə daha dərin analitik təhlil imkanı yaradır. Burada müxtəlif mikrokontrollerlərin müxtəlif illər üzrə fəaliyyət göstəriciləri müqayisəli şəkildə təqdim olunur. Məsələn, MC1 və MC2 tipli mikro kontrollerlərin 2021–2025-ci illər üzrə performans fərqləri çoxölçülü koordinat sistemində əks olunur. Bu yanaşma sistemin təkcə cari vəziyyətini deyil, həm də tarixi inkişaf trayektoriyasını vizual olaraq təhlil etməyə imkan yaradır.
+Mikro kontrollerlərin bu şəkildə təhlili, onların texniki sabitliyi, dözümlülük səviyyəsi və müxtəlif illərdəki iş rejimləri barədə obyektiv qərar vermək üçün əsaslı baza rolunu oynayır.
+Mikrokontrollerlərin İdarəetmə Məlumatları
+Sistemə inteqrasiya olunmuş mikrokontrollerlər müxtəlif coğrafi nöqtələrdə yerləşdirilərək ətraf mühitdən ölçmələr toplayır. Hər bir mikrokontrollerə bir və ya bir neçə sensor bağlanmışdır və bu sensorlar təyin olunmuş kalibrasiya aralığında fəaliyyət göstərir. Mikrokontrollerlərin cari vəziyyəti (aktiv/deaktiv), son kalibrasiya aralığı, yerləşmə koordinatları və sensor sayı uyğun cədvəldə verilmişdir. 
+Şəkil 2.15 Mikrokontrollerlər səhifəsinin görüntüsü.
+Cədvəldə verilmiş məlumatların açıqlaması:
+Koordinatlar - mikrokontrollerin quraşdırıldığı məkanın dəqiq məlumatını təqdim edir. Bu, əkin sahələrinin və ya istixanaların coğrafi xəritələşdirilməsində istifadə olunur. Sahəyə yeni mikrokontroller əlavə etdiyimiz zaman yenidən onu koordinatlarını seçirik.
+Sensor sayı -  Mikrokontrollerə qoşulan sensorların ümumi sayını göstərir. 1 mikrokontrollerə birdən çox sensor qoşulur. Tempratur sensorları və s .
+Kalibrasiya aralığı - həmin sensorların ölçmə imkanlarını və istifadə sahəsini müəyyən edir (məsələn, temperatur, rütubət və pH ölçmələri).
+Status -  mikrokontrollerin aktiv/deaktiv olduğunu göstərir. Əgər cihazda problem varsa onu sistemdən deaktiv edə bilirik.
+Yeni mikrokontrollerin əlavə edilməsi:
+Şəkil 2.16 Mikrokontroller əlavə edilməsi hissəsinin görüntüsü.
+Sistemə mikrokontrollerlərin əlavə edilməsi prosesində bir sıra parametrlərin daxil edilməsi tələb olunur. Bu parametrlər cihazların düzgün işləməsi, sistemə inteqrasiyası və yerləşdiyi fiziki mühitlə uyğunluğun təmin olunması baxımından mühüm rol oynayır. Bu bölmədə mikrokontrollerlərin əlavə edilmə forması və hər bir sahənin funksional əhəmiyyəti təhlil edilir.
+Mikrokontroller adı - mikrokontrollerin sistemdə unikal identifikasiyası üçün cihaz adı qeyd olunur. Bu adlar vasitəsilə cihazlar asanlıqla izlənə və idarə oluna bilir. Sistem daxilində çoxsaylı cihazlar ola bildiyi üçün hər bir mikrokontrollerin fərqli adla qeydiyyatı idarəetmədə qarışıqlığın qarşısını alır.
+Enlik və uzunluq koordinatları - cihazın coğrafi yerləşməsini göstərmək üçün enlik və uzunluq dəyərləri daxil edilir. Bu parametrlər vasitəsilə mikrokontrollerin konkret hansı bölgədə yerləşdiyi müəyyən edə bilirik. Bu məlumat, xüsusilə geniş əraziyə yayılmış aqrar və sənaye sistemlərində cihazların xəritə üzərindən izlənməsi və analizlər aparılması üçün zəruridir.
+Hündürlük - hündürlük parametri cihazın dəniz səviyyəsindən olan məsafəsini əks etdirir. Bu göstərici, bəzi sensorların (məsələn, atmosfer təzyiqini və ya havadakı nəmliliyi ölçən sensorların) düzgün işləməsi üçün əhəmiyyətlidir. Müxtəlif yüksəkliklərdə yerləşən cihazlardan əldə edilən məlumatların müqayisəli təhlili üçün bu göstərici nəzərə alınmalıdır.
+Sensor seçimi - mikrokontrollerlərə müxtəlif funksiyaları yerinə yetirmək üçün fərqli tipli sensorlar qoşula bilər. Sensor seçimi hissəsi vasitəsilə istifadəçi uyğun sensoru müəyyən edir. Bu, sistemin daha çevik və spesifik sahələrə uyğunlaşdırılmış formada işləməsinə imkan yaradır. Məsələn, rütubət, temperatur, pH və s. kimi fərqli parametrləri ölçən sensorlar fərqli mikrokontrollerlərə qoşula bilər.
+III FƏSİL. AQROTEXNİKADA MAŞIN ÖYRƏNMƏ MODELLƏRİN TƏTBİQİ.
+3.1. Süni intellektin mahiyyəti.
+Süni intellekt insan zəkasına aid tapşırıqları məsələn öyrənmə, düşünmə, problem həll etmə, qavrayış və qərar qəbul etmə kimi tapşırıqları yerinə yetirə bilən sistemdir. Bu, həmçinin ağıllı davranış qabiliyyətinə kompüter proqramlarının yaradılmasını öyrənən elmi sahənin adıdır [1]. Stuart Russell ilə Peter Norvig süni intellekti özlərinin yenilikçi kitabı "Artificial Intelligence: A Modern Approach"da "mühitdən qavrayışlar alan və hərəkətlər edən agentlərin öyrənilməsi" kimi təsvir edirlər[2]. Bu baxış ağıllı varlıqların ətraf mühiti necə qavradığını vurğulayır və müəyyən məqsədlərə çatma ehtimalını artırmaq üçün necə davrandığını göstərir.
+3.2. Maşın öyrənmə nədir və üstünlükləri.
+Machine Learning (ML) is a subset of Artificial Intelligence (AI) that enables systems to learn from data and improve their performance without being explicitly programmed. It involves algorithms that allow computers to analyze data, identify patterns, and make decisions or predictions based on the data [1]. ML encompasses various learning paradigms, including supervised, unsupervised, and reinforcement learning, each with distinct methodologies and applications.
+Aqrotexnikada maşın öyrənmənin rolu.
+Muasir zəmanədə gübrə, su, pestisidlər kimi resursları idarə etmək maşın öyrənmə alqoritmləri vasitəsi ilə asandlarşdırılıb. Dronlar, sensorlar vasitəsi ilə analiz edilməsi, fermerlərə resursları daha dəqiq paylamaq imkanı yaradır. Bu araşdırma ətraf mühitə və zibillərə olan təsirləri azaldır. Bu üsul məhsul məhsuldarlığında 15-20% artım və ümumi investisiyada 25-30% azalma göstərmişdir [7]. ML modelləri ətraf mühit və fenoloji məlumatları təhlil edərək məhsul məhsuldarlığını proqnozlaşdıra bilər. Məsələn, qış buğdasının məhsuldarlığını ənənəvi modellərə nisbətən daha yüksək dəqiqliklə proqnozlaşdırmaq üçün konvolyusiya neyron şəbəkələrindən istifadə edilmişdir ki, bu da daha yaxşı planlaşdırma və resursların bölüşdürülməsinə kömək etmişdir [8]. Şəkil təhlilindən istifadə etməklə, qabaqcıl maşın öyrənmə texnologiyaları - xüsusilə dərin öyrənmə - bitki xəstəliklərinin və zərərvericilərinin erkən aşkarlanmasına imkan verir. Bu erkən müdaxilə qabiliyyəti pestisidlərin istifadəsini azaldır, məhsul itkilərini minimuma endirir və vaxtında müalicəni təmin edir [9]. ML enerjidən optimal istifadəni təmin etməklə və ətraf mühitə dəyən zərəri minimuma endirməklə sağlam kənd təsərrüfatını təşviq edir. Süni intellektlə işləyən sistem, məsələn, nə qədər enerji tələb olunacağını təxmin edə və tullantıları müəyyən edə bilər ki, bu da təsərrüfatları daha ekoloji cəhətdən təmiz edir.
+Şəkil 3.1 Süni intellekt, maşın öyrənməsi və dərin öyrənmənin əsas anlayışını göstərən diaqram.
+3.3. Praktiki hissə
+İstifadə olunan kitabxanalar.
+Məlumatların emalı, vizuallaşdırılması və maşın öyrənməsi modelinin tətbiqi üçün Python əsas modulları məlumat emalı tövsiyə sistemi qurmağı asanlaşdırdı. Bu kitabxanalar modellərin sürətli yerləşdirilməsi və sınaqdan keçirilməsinə imkan verir və möhkəm təməl üzərində qurulur.
+Pandas: Məlumatların idarə edilməsi və manipulyasiyası hazırda bu kitabxanadan istifadə etməklə həyata keçirilir. Strukturlaşdırılmış məlumat dəstlərini oxumaq və effektiv şəkildə filtrləmək indi daha asandır. Bu cür məlumat dəstlərini təmizləmək və effektiv şəkildə təhlil etmək daha asan oldu [10].
+Matplotlib: Python-un əsas plan tərtibat kitabxanası olan Matplotlib məlumat dəstlərinin vizual təsvirlərini yaradır [11]. Vizual qiymətləndirməyə kömək edərək, bar və paylanma sahələrinin yaradılmasını asanlaşdırılması üçün istifadə olunur.
+Seaborn matplotlib-ə əsaslandığı üçün statistik vizuallaşdırmalar üçün faydalıdır. Atributlar arasında korrelyasiya matrisləri istilik xəritəsi (heatmap) alətindən istifadə etməklə göstərilmişdir. Xüsusiyyətlərin seçilməsi və məlumatların anlaşılması üçün bu, çox vacib olan xüsusiyyətlər arasındakı əlaqələrə dair fikir verir [12].
+Maşın öyrənmə prosesi üçün əsas kitabxana Scikit-learn (sklearn) adlanır. Nəzarət olunan öyrənmə üsullarının geniş spektri Təsadüfi Meşə Təsnifatları, Qərar Ağacları və Dəstək Vektor Maşınları (SVM) ilə təmsil olunur. O, həmçinin ilkin emal üçün LabelEncoder və StandardScaler, modelin qiymətləndirilməsi üçün accuracy_score və classification_report və məlumatların bölünməsi üçün train_test_split kimi utilitlərə malik idi.
+Texniki hissə.
+Məhsul tövsiyə sisteminin işlənib hazırlanması prosesi strukturlaşdırılmış və iterativ yanaşması üçün tədqiqat layihələrində geniş istifadə olunan CRISP-DM (Məlumat Mining üçün Sənayelərarası Standart Proses) çərçivəsində hazırlanmışdır. Aşağıda bu işdə istifadə olunan hər bir addımın təsviri verilmişdir.
+Məlumatların Anlaşması
+İstifadə olunan verilənlər bazası, sensorlar tərəfinnən yığılmış torpağın həftəlik ümumi məlumatlardı. Məlumat tipləri:
+temperatur – Orta temperatur °C
+rütubət – % ilə orta nisbi rütubət
+ph – Torpağın pH dəyəri
+yağıntı - Yağış mm
+ 
+Şəkil 3.2 Python vasitəsi ilə verilənləri oxumaq
+Şəkil 3.3 
+Proqnozlaşdırma modelinin qurulması
+Məlumatların əvvəlcədən işlənməsindən sonra nəzarət edilən öyrənmə tapşırığı Təsadüfi Meşə Təsnifatlayıcısından istifadə etməklə həll edildi, çünki bu, yüksək dəqiqliyi və həddən artıq uyğunlaşma üçün möhkəmliyi ilə tanınan güclü öyrənmə metodudur. Təsnifat boru kəmərinin necə həyata keçirildiyi nümunə.
+Şəkil 3.4 Təsadüfi meşə modelinin yaradılması
+Burada verilənlər giriş xüsusiyyətlərinə (x) və hədəf dəyişənə (y) bölünərək train_test_split funksianallığından istifadə edərək məlumatların 80%-i modeli öyrətmək üçün istifadə edilib, 20%-i isə sınaqdan keçirilib. Təsadüfi Meşə alqoritmləri xüsusiyyətlərin miqyaslaşmanı tələb etməsə də, funksiya paylamalarını standartlaşdırmaq üçün StandardScaler istifadə edərək normallaşdırma tətbiq edilmişdir. Bunu əksər hallarda modellər müqayisə edildikdə və ya SVM kimi məsafəyə əsaslanan alqoritmlərlə inteqrasiya olunduqda istifadə olunur.
+Model Qiymətləndirmə Metrikləri
+Şəkil 3.5 Model performans-ın metrikləri
+Accuracy proqnozların ümumi sayının bir hissəsi daxilində doğru olan proqnozları təmsil edir.
+F1-Score bütün siniflərin hər birində dəqiqlik balansı və xatırlatma verir. Çox sinifləri təsnif etmək üçün uyğundur.
+Geri çağırma modelin bütün müvafiq halları müəyyən etmək qabiliyyətini ölçür, dəqiqlik isə müsbət proqnozların düzgünlüyünü ölçür.
+ROC AUC Score çox sinifli One-vs-Rest kontekstində proqnozlaşdırılan ehtimallardan istifadə edərək modelin ayrı-seçkilik qabiliyyətini qiymətləndirir. Makro orta, sinif balanssızlığından asılı olmayaraq, bütün məhsul sinifləri üçün bərabər çəki təmin edir.
+Şəkil 3.6 Model nəticəsi
+Nəticə
+Bu dissertasiyada biz davamlı torpaq istifadəsini dəstəklədiyi üçün IoT sensorlarını, məlumat axınlarını və maşın öyrənməsini birləşdirən real vaxt rejimində ətraf mühitin monitorinqi sistemi və qərara dəstək sistemi hazırladıq. Davamlı sensor məlumatlarının toplanması və əsas innovasiya kimi proqnozlaşdırılan analitikanın birləşməsi daha ağıllı, ekoloji cəhətdən təmiz torpaqdan istifadəyə imkan verir.
+Sistemimiz torpağın rütubəti, pH və temperatur da daxil olmaqla, torpaq məlumatlarını real vaxt rejimində vizuallaşdırır. Torpaq üçün ən yaxşı meyvə və ya məhsulu təklif etmək üçün məlumatları təhlil edən maşın öyrənmə modeli də mövcuddur. Fermerlər və torpaq menecerləri ətraf mühitə təsiri azaltmaqla və məhsuldarlıq potensialını artırmaqla yanaşı, elmi məlumatlardan istifadə edərək məlumatlı əkin qərarları qəbul etmək üçün bu proqnozlaşdırma qabiliyyətindən faydalanırlar.
+Bu həll sınaq və səhv əkinçilik ehtiyacını azaldır, su və gübrə kimi resurslardan həddindən artıq istifadənin qarşısını alır və bioloji müxtəlifliyi təşviq etmək üçün məhsul seçimini torpaq şəraiti ilə uyğunlaşdırır. Sıfır aclıq, məsuliyyətli istehlak və iqlim fəaliyyəti kimi Davamlı İnkişaf Məqsədləri də bundan faydalanır.
+Ümumilikdə, bu iş ağıllı, genişlənən və ekoloji cəhətdən təmiz bir sistemi təmsil edir. O, həmçinin torpaq şəraitinə nəzarət etməklə daha səmərəli və ekoloji cəhətdən təmiz kənd təsərrüfatı qərarlarına rəhbərlik edir.
+Ədəbiyyat siyahı
+Russell, S., & Norvig, P. (2020). Artificial Intelligence: A Modern Approach (4th ed.). Pearson.
+NASA. (2023, October 30). What is Artificial Intelligence (AI)? NASA. https://www.nasa.gov/what-is-artificial-intelligence
+IBM. (n.d.). Artificial Intelligence – What it is and why it matters. IBM. https://www.ibm.com/think/topics/artificial-intelligence
+Raza, A., Rehman, A. U., Umer, M., & Li, D. (2024). Machine learning and AI-based frameworks for smart agriculture: Recent advances, challenges and future trends. Computers and Electronics in Agriculture, 211, 108303. https://doi.org/10.1016/j.compag.2024.108303
+Singh, A., Dutta, D., & Sharma, S. (2024). Deep learning-based yield prediction and soil analysis using drone and satellite imagery. Artificial Intelligence in Agriculture, 6, 75–87. https://doi.org/10.1016/j.aiia.2024.05.002
+Mohri, M., Rostamizadeh, A., & Talwalkar, A. (2021). Foundations of Machine Learning (2nd ed.). arXiv. https://arxiv.org/abs/2105.01282
+Dutta, D., Singh, A., & Mishra, S. (2024). Artificial Intelligence and Machine Learning in Agriculture: Transforming Farming Systems. ResearchGate. 
+1 & 6. Alpaydin, E. (year 2023). What is Machine Learning? ResearchGate. https://www.researchgate.net/publication/373015635_What_is_Machine_Learning
+https://www.researchgate.net/publication/389168083_Artificial_Intelligence_and_Machine_Learning_in_Agriculture_Transforming_Farming_Systems
+https://pandas.pydata.org/
+https://matplotlib.org/
+https://seaborn.pydata.org/
