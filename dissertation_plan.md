@@ -36,11 +36,12 @@ Giriş hissəsində mütləq olaraq alt-başlıqlarla aşağıdakılar öz əksi
 - Müdafiəyə təqdim edilən nəticələr (vəzifələr)
 - Nəticələrin aprobasiyası (əgər hər hansı konfransda və ya elmi jurnalda çap olunacaqsa).
 
-### FƏSİL I. ŞƏHƏR NƏQLİYYAT SİSTEMLƏRİ VƏ MODELLƏŞDİRİLMƏNİN NƏZƏRİ ƏSASLARI (Analitik baxış)
+### FƏSİL I. ƏDƏBİYYAT İCMALI (NƏZƏRİ ƏSASLAR)
 *Bu fəsildə əsasən ədəbiyyat icmalı və dünya təcrübəsi təhlil olunur.*
-**1.1.** Müasir şəhərlərdə nəqliyyat tıxacları problemi və "Ağıllı Şəhər" (Smart City) yanaşmaları.
-**1.2.** Nəqliyyat axınlarının riyazi və kompüter modelləşdirilməsi metodları (Makroskopik, Mikroskopik və Mezoskopik modellər).
-**1.3.** Mövcud simulyasiya proqramlarının analizi (SUMO, VISSIM, CityFlow) və veb-əsaslı sistemlərə olan ehtiyacın qiymətləndirilməsi.
+**1.1. Mövzunun nəzəri əsasları:** Nəqliyyat tıxacları, "Ağıllı Şəhər" (Smart City), "Rəqəmsal Əkiz" (Digital Twin), "Edge-Cloud Continuum" və makro/mezoskoçik/mikroskopik modelləşdirmə qavramları.
+**1.2. Mövzu üzrə aparılmış əvvəlki tədqiqatlar:** Mövcud simulyasiya proqramlarının analizi (SUMO, VISSIM, CityFlow), AI intellekt modellərinin tətbiqi və elmi bazaların (Scopus, Web of Science) göstəriciləri əsasında yanaşmalar.
+**1.3. Mövcud problemlər və tədqiqat boşluqları:** Masaüstü lokal mühitlərin limitləri, idarəetmədə çevikliyin olmaması və bulud/veb-əsaslı interaktiv sistemlərə (Dashboard) olan ehtiyacın qiymətləndirilməsi.
+**1.4. Fəsil üzrə nəticə:** İcmalın qısa xülasəsi və arxitektura fəslinə keçid.
 
 ### FƏSİL II. SİSTEM ARXİTEKTURASI VƏ MODELLƏŞDİRİLMƏ ALQORİTMLƏRİNİN İŞLƏNMƏSİ (Elmi-Nəzəri və Eksperimental hissə)
 *Bu fəsil birbaşa arxitekturanın və backend/simulyasiya məntiqinin qurulmasını əhatə edir.*
