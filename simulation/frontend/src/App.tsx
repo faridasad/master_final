@@ -238,6 +238,9 @@ function StatCard({ icon, label, value, unit, colorBg, colorText }: {
 // ---------- Main App ----------
 
 function App() {
+  const API_BASE = import.meta.env.VITE_API_BASE_URL || ''
+  const WS_BASE = import.meta.env.VITE_WS_BASE_URL || ''
+
   const [wsStatus, setWsStatus] = useState('Əlaqə kəsilib')
   const [simState, setSimState] = useState<SimulationState>({
     center: { lat: 40.4000, lng: 49.8525 },
@@ -248,7 +251,7 @@ function App() {
   const [activeTab, setActiveTab] = useState<'analytics' | 'congestion' | 'control'>('analytics')
 
   useEffect(() => {
-    const ws = new WebSocket('ws://localhost:8000/ws')
+    const ws = new WebSocket(`${WS_BASE}/ws`)
     ws.onopen = () => setWsStatus('Qoşulub')
     ws.onmessage = (event) => {
       try { 
@@ -264,13 +267,13 @@ function App() {
   }, [])
 
   const toggleSimulation = useCallback(async () => {
-    try { await fetch('http://localhost:8000/api/simulation/toggle', { method: 'POST' }) }
+    try { await fetch(`${API_BASE}/api/simulation/toggle`, { method: 'POST' }) }
     catch (e) { console.error(e) }
   }, [])
 
   const toggleAdaptiveAll = useCallback(async (enabled: boolean) => {
     try {
-      await fetch(`http://localhost:8000/api/adaptive/toggle-all?enabled=${enabled}`, { method: 'POST' })
+      await fetch(`${API_BASE}/api/adaptive/toggle-all?enabled=${enabled}`, { method: 'POST' })
     } catch (e) { console.error(e) }
   }, [])
 
