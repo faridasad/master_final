@@ -1,12 +1,16 @@
 @import "tailwindcss";
 
 @theme {
-  --color-brand-neon: #00f0ff;
-  --color-success-neon: #39ff14;
-  --color-danger-neon: #ff003c;
-  --color-dark-bg: #0f172a;
-  --color-dark-card: #1e293b;
-  --color-dark-border: #334155;
+  --color-primary: #0284c7;
+  --color-primary-light: #e0f2fe;
+  --color-success: #10b981;
+  --color-danger: #ef4444;
+  --color-warning: #f59e0b;
+  --color-bg-main: #f8fafc;
+  --color-bg-card: #ffffff;
+  --color-text-main: #334155;
+  --color-text-muted: #64748b;
+  --color-border: #e2e8f0;
 }
 
 *, *::before, *::after {
@@ -17,57 +21,98 @@ body {
   margin: 0;
   min-width: 320px;
   min-height: 100vh;
-  background-color: var(--color-dark-bg);
-  color: #f8fafc;
+  background-color: var(--color-bg-main);
+  color: var(--color-text-main);
   font-family: 'Inter', system-ui, -apple-system, sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }
 
-/* Glassmorphism */
-.glass-panel {
-  background: rgba(30, 41, 59, 0.7);
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
+/* Cards & Layout */
+.modern-card {
+  background: var(--color-bg-card);
+  border: 1px solid var(--color-border);
+  border-radius: 12px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.02), 0 4px 12px rgba(0, 0, 0, 0.02);
 }
 
-.neon-border-blue {
-  border: 1px solid var(--color-brand-neon);
-  box-shadow: 0 0 10px rgba(0, 240, 255, 0.2), inset 0 0 10px rgba(0, 240, 255, 0.1);
+.modern-btn {
+  transition: all 0.2s ease;
 }
-
-.text-glow {
-  text-shadow: 0 0 8px rgba(255, 255, 255, 0.5);
+.modern-btn:active {
+  transform: scale(0.97);
 }
 
 /* Leaflet Overrides */
-.vehicle-marker {
+.leaflet-marker-icon {
+  transition: transform 0.1s linear !important;
+}
+
+.vehicle-marker, .traffic-light-marker {
   background: transparent !important;
   border: none !important;
 }
 
-.vehicle-tooltip {
-  background: rgba(15, 23, 42, 0.95) !important;
-  color: #e2e8f0 !important;
-  border: 1px solid rgba(0, 240, 255, 0.3) !important;
+/* SVG styling */
+.car-svg {
+  filter: drop-shadow(0 2px 4px rgba(0,0,0,0.15));
+  transition: filter 0.2s ease;
+}
+.car-svg .car-body-fill {
+  fill: var(--car-color, #0ea5e9);
+  transition: fill 0.15s ease;
+}
+.car-svg .car-window {
+  fill: rgba(255, 255, 255, 0.5);
+}
+.car-svg .car-outline {
+  stroke: rgba(0, 0, 0, 0.1);
+  stroke-width: 0.5;
+  fill: none;
+}
+
+/* Traffic Light Dots */
+.tl-dot {
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  border: 2px solid #ffffff;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+}
+
+/* Tooltips */
+.vehicle-tooltip, .tl-tooltip {
+  background: #ffffff !important;
+  color: #334155 !important;
+  border: 1px solid #e2e8f0 !important;
   border-radius: 8px !important;
-  font-size: 11px !important;
-  padding: 6px 10px !important;
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5) !important;
+  font-size: 12px !important;
+  font-weight: 500 !important;
+  padding: 8px 12px !important;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08) !important;
 }
 
-.vehicle-tooltip::before {
-  border-top-color: rgba(0, 240, 255, 0.3) !important;
+.vehicle-tooltip::before, .tl-tooltip::before {
+  border-top-color: #e2e8f0 !important;
 }
 
+/* Map credits */
 .leaflet-control-attribution {
-  background: rgba(15, 23, 42, 0.7) !important;
+  background: rgba(255, 255, 255, 0.8) !important;
   color: #64748b !important;
-  font-size: 9px !important;
+  font-size: 10px !important;
+  border-top-left-radius: 4px;
+}
+.leaflet-control-attribution a {
+  color: #0284c7 !important;
 }
 
-.leaflet-control-attribution a {
-  color: #94a3b8 !important;
-}
+/* Scrollbar */
+::-webkit-scrollbar { width: 4px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
+::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+
+/* Congestion animations */
+@keyframes bar-fill { from { width: 0%; } }
+.congestion-bar { animation: bar-fill 0.5s ease-out; transition: width 0.3s ease; }
