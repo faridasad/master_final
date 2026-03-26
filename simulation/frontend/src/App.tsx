@@ -406,7 +406,7 @@ function App() {
                 </div>
 
                 <div className="modern-card p-5 mt-2">
-                  <h3 className="text-xs font-bold text-slate-500 uppercase tracking-wide mb-4">Svetofor Düsturları</h3>
+                  <h3 className="text-xs font-bold text-slate-500 uppercase tracking-wide mb-4">İşıqforlar</h3>
                   <div className="flex items-center gap-4">
                     <div className="flex-1 flex flex-col items-center p-3 rounded-xl bg-emerald-50 border border-emerald-100">
                       <span className="text-3xl font-bold text-emerald-600">{greenLights}</span>
