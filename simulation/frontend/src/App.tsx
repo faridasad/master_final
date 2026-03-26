@@ -2,7 +2,7 @@ import { useEffect, useState, useRef, useCallback } from 'react'
 import { MapContainer, TileLayer, useMap } from 'react-leaflet'
 import L from 'leaflet'
 import 'leaflet/dist/leaflet.css'
-import { Radio, Cpu, Car, Gauge, BarChart3, TrafficCone, Zap, Play, Pause, Activity, MapPin } from 'lucide-react'
+import { Radio, Cpu, Car, Gauge, BarChart3, TrafficCone, Zap, Play, Pause, MapPin } from 'lucide-react'
 
 // ---------- Types ----------
 
