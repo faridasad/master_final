@@ -37,7 +37,7 @@ Bütün mənbələrin orijinal məqalələrinə və ya yükləmə səhifələrin
 24. Dembski, Fabian et al. (2020). Urban Digital Twins for Smart Cities and Citizens: The Case Study of Herrenberg, Germany. *Sustainability*. [Link](https://doi.org/10.3390/su12062307)
 25. Yu, Qing et al. (2023). Web-based spatio-temporal data visualization technology for urban digital twin. *Handbook of Mobility Data Mining*. [Link](https://doi.org/10.1016/B978-0-443-18428-4.00002-5)
 26. Krämer, Michel, Gutbell, Ralf (2015). A case study on 3D geospatial applications in the web using state-of-the-art WebGL frameworks. *Proceedings of the 20th International Conference on 3D Web Technology*. [Link](https://doi.org/10.1145/2775292.2775303)
-27. Tucker, C. S. et al. (2017). Special Issue: Data-Driven Design (D3). *Journal of Mechanical Design*. [Link](https://doi.org/10.1115/1.4037943)
+27. Kim, H. H. M., Liu, Y., Wang, C. C. L., & Wang, Y. (2017). Special Issue: Data-Driven Design (D3). *Journal of Mechanical Design*. [Link](https://doi.org/10.1115/1.4037943)
 28. White, Gary et al. (2021). A digital twin smart city for citizen feedback. *Cities*. [Link](https://doi.org/10.1016/j.cities.2020.103064)
 29. Agostinelli, Sofia et al. (2021). Cyber-Physical Systems Improving Building Energy Management: Digital Twin and Artificial Intelligence. *Energies*. [Link](https://doi.org/10.3390/en14082338)
 30. Xu, Haowen et al. (2022). Interactive Web Application for Traffic Simulation Data Management and Visualization. *Transportation Research Record: Journal of the Transportation Research Board*. [Link](https://doi.org/10.1177/03611981211035760)
