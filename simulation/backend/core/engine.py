@@ -2,9 +2,12 @@ import time
 import random
 import json
 import math
-from models.vehicle import Vehicle
+from models.vehicle import Vehicle, VEHICLE_TYPES
 from models.traffic_light import IntersectionTrafficLight
 from core.adaptive_controller import AdaptiveController
+from core.kpi_collector import KPICollector
+from core.scenario_manager import ScenarioManager
+from core.green_wave import GreenWaveController
 
 
 class SimulationEngine:
@@ -39,7 +42,8 @@ class SimulationEngine:
         self.spawn_timer = 0.0
         self.spawn_interval = 3.0
         self.vehicle_counter = 0
-        self.max_vehicles = 30
+        self.max_vehicles = 80  # Increased from 30
+        self.sim_clock = 0.0    # Total simulation time
         
         # --- Traffic Lights ---
         self.traffic_lights = {}  # node_id -> IntersectionTrafficLight
@@ -50,6 +54,17 @@ class SimulationEngine:
         # Enable adaptive mode for all intersections by default
         for tl in self.traffic_lights.values():
             self.adaptive_controller.enable_for_intersection(tl)
+        
+        # --- KPI Collector ---
+        self.kpi_collector = KPICollector(snapshot_interval=5.0)
+        
+        # --- Scenario Manager ---
+        self.scenario_manager = ScenarioManager()
+        
+        # --- Green Wave Controller ---
+        self.green_wave = GreenWaveController()
+        self.green_wave.detect_corridors(self.edges, self.traffic_lights, self.outgoing)
+        print(f"Green Wave: detected {len(self.green_wave.corridors)} corridors")
 
     def _detect_intersections(self):
         """
@@ -93,7 +108,8 @@ class SimulationEngine:
         self.vehicle_counter += 1
         vid = f"v_{self.vehicle_counter}"
         v = Vehicle(id=vid, lane=eid, initial_position=0.0)
-        v.v0 = (edge["maxspeed_kmh"] / 3.6) * random.uniform(0.85, 1.1)
+        v.v0 = (edge["maxspeed_kmh"] / 3.6) * (VEHICLE_TYPES.get(v.vehicle_type, {}).get("speed_factor", 1.0)) * random.uniform(0.85, 1.1)
+        v.birth_time = self.sim_clock
         lane_vehicles.append(v)
 
     def transfer_vehicle(self, vehicle, current_edge):
@@ -102,6 +118,9 @@ class SimulationEngine:
         next_edges = self.outgoing.get(end_node, [])
         
         if not next_edges:
+            # Dead end — record trip completion for KPI
+            travel_time = self.sim_clock - vehicle.birth_time
+            self.kpi_collector.record_vehicle_completed(travel_time)
             return False  # Dead end, remove vehicle
         
         # Pick a random outgoing edge (simple routing)
@@ -116,11 +135,15 @@ class SimulationEngine:
             vehicle.speed = 0
             return True  # Keep on current edge
         
+        # Record intersection passage for KPI
+        self.kpi_collector.record_vehicle_passed_intersection()
+        
         # Transfer
         overflow = vehicle.position - current_edge["length_m"]
         vehicle.position = max(0, overflow)
         vehicle.lane = next_eid
-        vehicle.v0 = (next_edge["maxspeed_kmh"] / 3.6) * random.uniform(0.9, 1.05)
+        vt_factor = VEHICLE_TYPES.get(vehicle.vehicle_type, {}).get("speed_factor", 1.0)
+        vehicle.v0 = (next_edge["maxspeed_kmh"] / 3.6) * vt_factor * random.uniform(0.9, 1.05)
         
         # Remove from old, add to new
         self.vehicles.get(next_eid, []).append(vehicle)
@@ -142,10 +165,12 @@ class SimulationEngine:
         return distance, state
 
     def step(self, dt):
+        self.sim_clock += dt
+
         # --- Spawn vehicles ---
         self.spawn_timer += dt
         if self.spawn_timer >= self.spawn_interval:
-            for _ in range(random.randint(1, 2)):
+            for _ in range(random.randint(1, 3)):
                 self.add_vehicle()
             self.spawn_timer = 0.0
 
@@ -158,6 +183,9 @@ class SimulationEngine:
         self.adaptive_controller.step(dt, self.traffic_lights, vehicle_counts)
 
         # --- Step vehicles ---
+        active_speeds = []
+        stopped_count = 0
+
         for eid in self.edge_ids:
             lane_vehicles = self.vehicles[eid]
             edge = self.get_edge(eid)
@@ -176,6 +204,13 @@ class SimulationEngine:
                     traffic_light_distance=tl_distance,
                     traffic_light_state=tl_state
                 )
+                
+                # KPI tracking
+                self.kpi_collector.record_vehicle_tick()
+                if v.speed < 1.0:
+                    self.kpi_collector.record_vehicle_stopped(dt)
+                    stopped_count += 1
+                active_speeds.append(v.speed)
 
             # Handle vehicles that reached end of edge
             remaining = []
@@ -184,7 +219,7 @@ class SimulationEngine:
                     # Check traffic light - don't let vehicle pass on red/yellow
                     end_node = edge["v"]
                     tl = self.traffic_lights.get(end_node)
-                    if tl and tl.get_state_for_edge(eid) in ["Red", "Yellow"]:
+                    if tl and tl.mode != "flash_yellow" and tl.get_state_for_edge(eid) in ["Red", "Yellow"]:
                         # Force stop at intersection
                         v.position = edge["length_m"] - 0.5
                         v.speed = 0
@@ -196,6 +231,18 @@ class SimulationEngine:
                 else:
                     remaining.append(v)
             self.vehicles[eid] = remaining
+
+        # --- Step KPI Collector ---
+        active_count = len(active_speeds)
+        avg_speed = sum(active_speeds) / max(active_count, 1)
+        queue_lengths = {eid: len(vlist) for eid, vlist in self.vehicles.items()}
+        
+        # Track current mode for KPI comparison
+        adaptive_count = sum(1 for tl in self.traffic_lights.values() if tl.mode == "adaptive")
+        current_mode = "adaptive" if adaptive_count > len(self.traffic_lights) / 2 else "fixed"
+        self.kpi_collector.set_mode(current_mode)
+        
+        self.kpi_collector.step(dt, active_count, avg_speed, stopped_count, queue_lengths)
 
     def get_vehicle_latlng(self, v, edge):
         u_node = self.map_data["nodes"].get(edge["u"])
@@ -230,8 +277,45 @@ class SimulationEngine:
                     vd["bearing"] = pos["bearing"]
                     all_vehicles.append(vd)
         
-        # Serialize traffic lights
-        traffic_lights_data = [tl.to_dict() for tl in self.traffic_lights.values()]
+        # Serialize traffic lights with edge bearing info
+        traffic_lights_data = []
+        for tl in self.traffic_lights.values():
+            tl_data = tl.to_dict()
+            # Compute bearing for each incoming edge (road direction entering the intersection)
+            edge_bearings = {}
+            for eid in tl.incoming_edge_ids:
+                edge = self.edge_map.get(eid)
+                if edge:
+                    u_node = self.map_data["nodes"].get(edge["u"])
+                    v_node = self.map_data["nodes"].get(edge["v"])
+                    if u_node and v_node:
+                        dlat = v_node["lat"] - u_node["lat"]
+                        dlng = v_node["lng"] - u_node["lng"]
+                        bearing = math.degrees(math.atan2(dlng, dlat))
+                        edge_bearings[eid] = {
+                            "bearing": round(bearing, 1),
+                            "length_m": round(edge["length_m"], 1),
+                            "name": edge.get("name", ""),
+                            "lanes": edge.get("lanes", 1),
+                        }
+            # Outgoing edges too
+            outgoing_bearings = {}
+            out_edges = self.outgoing.get(tl.node_id, [])
+            for edge in out_edges:
+                eid = edge["id"]
+                u_node = self.map_data["nodes"].get(edge["u"])
+                v_node = self.map_data["nodes"].get(edge["v"])
+                if u_node and v_node:
+                    dlat = v_node["lat"] - u_node["lat"]
+                    dlng = v_node["lng"] - u_node["lng"]
+                    bearing = math.degrees(math.atan2(dlng, dlat))
+                    outgoing_bearings[eid] = {
+                        "bearing": round(bearing, 1),
+                        "length_m": round(edge["length_m"], 1),
+                    }
+            tl_data["edge_bearings"] = edge_bearings
+            tl_data["outgoing_bearings"] = outgoing_bearings
+            traffic_lights_data.append(tl_data)
         
         # Congestion per edge (for dashboard)
         edge_congestion = []
@@ -261,7 +345,11 @@ class SimulationEngine:
             "traffic_lights": traffic_lights_data,
             "edge_congestion": edge_congestion[:10],  # Top 10 most congested
             "adaptive_controller": self.adaptive_controller.to_dict(),
+            "kpi": self.kpi_collector.to_dict(),
+            "scenario": self.scenario_manager.to_dict(),
+            "green_wave": self.green_wave.to_dict(),
             "status": "Running" if self.running else "Stopped",
+            "sim_clock": round(self.sim_clock, 1),
             "active_count": len(all_vehicles),
             "total_edges": len(self.edges),
             "total_nodes": len(self.map_data.get("nodes", {})),

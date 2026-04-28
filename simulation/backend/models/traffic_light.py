@@ -69,6 +69,19 @@ class IntersectionTrafficLight:
         """Advance the traffic light by dt seconds."""
         if not self.phases:
             return
+        
+        # Flash yellow mode (night scenario): alternate yellow/green every 1.5s
+        if self.mode == "flash_yellow":
+            self.cycle_time += dt
+            if self.cycle_time >= 1.5:
+                self.cycle_time = 0.0
+                # Toggle between yellow and green for all edges
+                for eid in self.incoming_edge_ids:
+                    if self.edge_states.get(eid) == "Yellow":
+                        self.edge_states[eid] = "Green"
+                    else:
+                        self.edge_states[eid] = "Yellow"
+            return
             
         self.cycle_time += dt
         current_duration = self.phases[self.current_phase_index]["duration"]

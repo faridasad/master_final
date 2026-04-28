@@ -2,18 +2,24 @@ import { useEffect, useState, useRef, useCallback } from 'react'
 import { MapContainer, TileLayer, useMap } from 'react-leaflet'
 import L from 'leaflet'
 import 'leaflet/dist/leaflet.css'
-import { Radio, Cpu, Car, Gauge, BarChart3, TrafficCone, Zap, Play, Pause, MapPin } from 'lucide-react'
+import 'leaflet.heat'
+import { Radio, Cpu, Car, Gauge, BarChart3, TrafficCone, Zap, Play, Pause, MapPin, TrendingUp, Layers, Clock, Timer, Activity, Flame, X, Video } from 'lucide-react'
+import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend, AreaChart, Area } from 'recharts'
+import IntersectionCamera3D from './components/IntersectionCamera3D'
 
 // ---------- Types ----------
 
 interface VehicleData {
   id: string; lane: string; position: number; speed: number; acceleration: number
   lat: number; lng: number; bearing: number
+  type: string; length: number
 }
 
 interface TrafficLightData {
   node_id: string; lat: number; lng: number
   edge_states: Record<string, string>
+  edge_bearings?: Record<string, { bearing: number; length_m: number; name?: string; lanes?: number }>
+  outgoing_bearings?: Record<string, { bearing: number; length_m: number }>
   phase_index: number; time_left: number
   mode: string; total_phases: number
 }
@@ -28,17 +34,60 @@ interface AdaptiveData {
   min_green: number; max_green: number
 }
 
+interface KPISnapshot {
+  time: number; active_count: number; avg_speed_kmh: number
+  stopped_count: number; throughput_per_min: number
+  avg_delay_s: number; stopped_ratio_pct: number; max_queue_length: number
+  mode: string
+}
+
+interface KPIData {
+  current_kpis: {
+    avg_speed_kmh: number; throughput_per_min: number
+    avg_delay_s: number; stopped_ratio_pct: number; max_queue_length: number
+  }
+  summary: { total_sim_time: number; total_delay: number; vehicles_completed: number; avg_travel_time: number }
+  snapshots: KPISnapshot[]
+  comparison: { fixed: KPISnapshot[]; adaptive: KPISnapshot[] }
+}
+
+interface ScenarioInfo {
+  id: string; name: string; name_en: string; description: string
+  spawn_interval: number; max_vehicles: number; active: boolean
+}
+
+interface ScenarioData {
+  current: string; current_name: string; scenarios: ScenarioInfo[]
+}
+
+interface GreenWaveData {
+  active: boolean; corridors_count: number
+}
+
 interface SimulationState {
   center: { lat: number; lng: number }
   vehicles: VehicleData[]
   traffic_lights: TrafficLightData[]
   edge_congestion: EdgeCongestion[]
   adaptive_controller: AdaptiveData
+  kpi: KPIData
+  scenario: ScenarioData
+  green_wave: GreenWaveData
   status: string
+  sim_clock: number
   active_count: number
   total_edges: number
   total_nodes: number
   total_intersections: number
+}
+
+// ---------- Vehicle Colors by Type ----------
+
+const VEHICLE_TYPE_COLORS: Record<string, { body: string; label: string }> = {
+  car:   { body: '#0284c7', label: 'Minik' },
+  suv:   { body: '#6366f1', label: 'SUV' },
+  bus:   { body: '#d97706', label: 'Avtobus' },
+  truck: { body: '#ea580c', label: 'Yük' },
 }
 
 // ---------- Vehicle Layer ----------
@@ -61,27 +110,33 @@ function VehicleLayer({ vehicles }: { vehicles: VehicleData[] }) {
     vehicles.forEach(v => {
       const speedKmh = v.speed * 3.6
       const isBraking = v.acceleration < -0.5
+      const vType = v.type || 'car'
+      const typeInfo = VEHICLE_TYPE_COLORS[vType] || VEHICLE_TYPE_COLORS.car
 
-      // Modern solid colors per speed
-      let color = '#0284c7' // Primary blue (Normal 20-45)
-      if (speedKmh < 5) color = '#ef4444' // Red (Stopped <5)
-      else if (speedKmh < 20) color = '#f59e0b' // Amber (Slow 5-20)
-      else if (speedKmh > 45) color = '#10b981' // Green (Fast >45)
+      // Speed-based color override
+      let color = typeInfo.body
+      if (speedKmh < 5) color = '#ef4444'
+      else if (speedKmh < 20) color = '#f59e0b'
+      else if (speedKmh > 45) color = '#10b981'
 
       const brakeColor = isBraking ? '#ef4444' : 'rgba(255,255,255,0.2)'
       const rotation = v.bearing - 90
 
+      // Adjust SVG size based on vehicle type
+      const w = vType === 'bus' ? 30 : vType === 'truck' ? 28 : vType === 'suv' ? 24 : 22
+      const h = vType === 'bus' ? 10 : 12
+
       const carSvg = `
         <div class="car-svg" style="--car-color: ${color}; transform: rotate(${rotation}deg); transition: transform 0.1s linear;">
-          <svg width="22" height="12" viewBox="0 0 22 12" xmlns="http://www.w3.org/2000/svg">
-            <rect class="car-body-fill" x="2" y="1" width="18" height="10" rx="3" ry="3" style="fill:${color}"/>
-            <rect class="car-outline" x="2" y="1" width="18" height="10" rx="3" ry="3"/>
-            <rect class="car-window" x="12" y="2.5" width="4.5" height="7" rx="1.5"/>
-            <rect class="car-window" x="4.5" y="3" width="3.5" height="6" rx="1"/>
-            <rect x="19" y="2" width="2" height="2" rx="0.5" fill="#f8fafc"/>
-            <rect x="19" y="8" width="2" height="2" rx="0.5" fill="#f8fafc"/>
+          <svg width="${w}" height="${h}" viewBox="0 0 ${w} ${h}" xmlns="http://www.w3.org/2000/svg">
+            <rect class="car-body-fill" x="2" y="1" width="${w-4}" height="${h-2}" rx="3" ry="3" style="fill:${color}"/>
+            <rect class="car-outline" x="2" y="1" width="${w-4}" height="${h-2}" rx="3" ry="3"/>
+            <rect class="car-window" x="${w-10}" y="2.5" width="4.5" height="${h-5}" rx="1.5"/>
+            <rect class="car-window" x="4.5" y="3" width="3.5" height="${h-6}" rx="1"/>
+            <rect x="${w-3}" y="2" width="2" height="2" rx="0.5" fill="#f8fafc"/>
+            <rect x="${w-3}" y="${h-4}" width="2" height="2" rx="0.5" fill="#f8fafc"/>
             <rect x="1" y="2.5" width="2" height="2" rx="0.5" fill="${brakeColor}"/>
-            <rect x="1" y="7.5" width="2" height="2" rx="0.5" fill="${brakeColor}"/>
+            <rect x="1" y="${h-4.5}" width="2" height="2" rx="0.5" fill="${brakeColor}"/>
           </svg>
         </div>`
 
@@ -97,24 +152,20 @@ function VehicleLayer({ vehicles }: { vehicles: VehicleData[] }) {
             wrapper.style.transform = `rotate(${rotation}deg)`
             const bodyFill = wrapper.querySelector('.car-body-fill') as SVGElement
             if (bodyFill) bodyFill.style.fill = color
-            const tails = wrapper.querySelectorAll('rect[fill]')
-            tails.forEach((r, i) => {
-              if (i >= 4) (r as SVGElement).setAttribute('fill', brakeColor)
-            })
           }
         }
       } else {
         const carIcon = L.divIcon({
           className: 'vehicle-marker',
           html: carSvg,
-          iconSize: [22, 12],
-          iconAnchor: [11, 6]
+          iconSize: [w, h],
+          iconAnchor: [w/2, h/2]
         })
 
         const marker = L.marker([v.lat, v.lng], { icon: carIcon, interactive: true })
         marker.bindTooltip(
           `<div class="flex flex-col gap-1">
-             <span class="text-slate-500 text-[10px] uppercase">Avtomobil ${v.id}</span>
+             <span class="text-slate-500 text-[10px] uppercase">${typeInfo.label} ${v.id}</span>
              <span class="font-bold text-slate-800">${speedKmh.toFixed(0)} <span class="font-normal text-slate-500">km/s</span></span>
            </div>`,
           { direction: 'top', offset: [0, -10], className: 'vehicle-tooltip' }
@@ -137,7 +188,7 @@ function VehicleLayer({ vehicles }: { vehicles: VehicleData[] }) {
 
 // ---------- Traffic Light Layer ----------
 
-function TrafficLightLayer({ trafficLights }: { trafficLights: TrafficLightData[] }) {
+function TrafficLightLayer({ trafficLights, onSelect }: { trafficLights: TrafficLightData[]; onSelect?: (tl: TrafficLightData) => void }) {
   const map = useMap()
   const markersRef = useRef<Map<string, L.Marker>>(new Map())
 
@@ -161,8 +212,8 @@ function TrafficLightLayer({ trafficLights }: { trafficLights: TrafficLightData[
       if (hasGreen) bg = '#10b981' // Green
       else if (hasYellow) bg = '#f59e0b' // Yellow
 
-      const modeStr = tl.mode === 'adaptive' ? 'Süni İntellekt' : 'Sabit'
-      const iconStr = tl.mode === 'adaptive' ? '✨' : '⏱️'
+      const modeStr = tl.mode === 'adaptive' ? 'Süni İntellekt' : tl.mode === 'flash_yellow' ? 'Gecə' : 'Sabit'
+      const iconStr = tl.mode === 'adaptive' ? '✨' : tl.mode === 'flash_yellow' ? '🌙' : '⏱️'
 
       const existingMarker = currentMarkers.get(tl.node_id)
 
@@ -196,9 +247,11 @@ function TrafficLightLayer({ trafficLights }: { trafficLights: TrafficLightData[
              <span class="text-slate-700">Faza: <b>${tl.phase_index + 1}/${tl.total_phases}</b></span>
              <span class="text-slate-700">Qalan vaxt: <b>${tl.time_left} san</b></span>
              <span class="text-slate-700">Rejim: <span class="${tl.mode === 'adaptive' ? 'text-blue-600' : 'text-slate-600'}">${modeStr}</span></span>
+             <span class="text-sky-500 text-[10px] mt-1">📷 Klik — 3D Kamera</span>
            </div>`,
           { direction: 'top', offset: [0, -10], className: 'tl-tooltip' }
         )
+        marker.on('click', () => { if (onSelect) onSelect(tl) })
         marker.addTo(map)
         currentMarkers.set(tl.node_id, marker)
       }
@@ -209,6 +262,49 @@ function TrafficLightLayer({ trafficLights }: { trafficLights: TrafficLightData[
     return () => {
       markersRef.current.forEach(marker => marker.remove())
       markersRef.current.clear()
+    }
+  }, [])
+
+  return null
+}
+
+// ---------- Heatmap Layer ----------
+
+function HeatmapLayer({ vehicles, enabled }: { vehicles: VehicleData[]; enabled: boolean }) {
+  const map = useMap()
+  const heatRef = useRef<any>(null)
+
+  useEffect(() => {
+    if (!enabled) {
+      if (heatRef.current) {
+        map.removeLayer(heatRef.current)
+        heatRef.current = null
+      }
+      return
+    }
+
+    const heatData: [number, number, number][] = vehicles.map(v => [
+      v.lat, v.lng, v.speed * 3.6 < 5 ? 1.0 : v.speed * 3.6 < 20 ? 0.6 : 0.2
+    ])
+
+    if (heatRef.current) {
+      heatRef.current.setLatLngs(heatData)
+    } else {
+      heatRef.current = (L as any).heatLayer(heatData, {
+        radius: 30,
+        blur: 20,
+        maxZoom: 18,
+        max: 1.0,
+        gradient: { 0.2: '#10b981', 0.4: '#0284c7', 0.6: '#f59e0b', 0.8: '#ef4444', 1.0: '#dc2626' }
+      }).addTo(map)
+    }
+  }, [vehicles, enabled, map])
+
+  useEffect(() => {
+    return () => {
+      if (heatRef.current) {
+        heatRef.current.remove()
+      }
     }
   }, [])
 
@@ -235,6 +331,36 @@ function StatCard({ icon, label, value, unit, colorBg, colorText }: {
   )
 }
 
+// ---------- Mini KPI Card ----------
+
+function MiniKPI({ label, value, unit, color }: { label: string; value: string | number; unit: string; color: string }) {
+  return (
+    <div className="flex flex-col items-center p-3 rounded-xl border" style={{ backgroundColor: color + '10', borderColor: color + '30' }}>
+      <span className="text-2xl font-bold" style={{ color }}>{value}</span>
+      <span className="text-[10px] font-semibold uppercase mt-1" style={{ color: color + 'cc' }}>{label}</span>
+      <span className="text-[10px] text-slate-400">{unit}</span>
+    </div>
+  )
+}
+
+// ---------- Scenario Button ----------
+const SCENARIO_ICONS: Record<string, string> = {
+  peak: '🔥', normal: '☀️', night: '🌙', stress: '⚡'
+}
+const SCENARIO_COLORS: Record<string, string> = {
+  peak: 'bg-red-50 border-red-200 text-red-700',
+  normal: 'bg-sky-50 border-sky-200 text-sky-700',
+  night: 'bg-indigo-50 border-indigo-200 text-indigo-700',
+  stress: 'bg-amber-50 border-amber-200 text-amber-700',
+}
+
+// ---------- Format Time ----------
+function formatSimTime(seconds: number): string {
+  const m = Math.floor(seconds / 60)
+  const s = Math.floor(seconds % 60)
+  return `${m}:${s.toString().padStart(2, '0')}`
+}
+
 // ---------- Main App ----------
 
 function App() {
@@ -246,9 +372,18 @@ function App() {
     center: { lat: 40.4000, lng: 49.8525 },
     vehicles: [], traffic_lights: [], edge_congestion: [],
     adaptive_controller: { enabled: true, update_interval: 30, min_green: 8, max_green: 45 },
-    status: 'Dayandırılıb', active_count: 0, total_edges: 0, total_nodes: 0, total_intersections: 0
+    kpi: {
+      current_kpis: { avg_speed_kmh: 0, throughput_per_min: 0, avg_delay_s: 0, stopped_ratio_pct: 0, max_queue_length: 0 },
+      summary: { total_sim_time: 0, total_delay: 0, vehicles_completed: 0, avg_travel_time: 0 },
+      snapshots: [], comparison: { fixed: [], adaptive: [] }
+    },
+    scenario: { current: 'normal', current_name: '', scenarios: [] },
+    green_wave: { active: false, corridors_count: 0 },
+    status: 'Dayandırılıb', sim_clock: 0, active_count: 0, total_edges: 0, total_nodes: 0, total_intersections: 0
   })
-  const [activeTab, setActiveTab] = useState<'analytics' | 'congestion' | 'control'>('analytics')
+  const [activeTab, setActiveTab] = useState<'analytics' | 'congestion' | 'control' | 'charts'>('analytics')
+  const [heatmapOn, setHeatmapOn] = useState(false)
+  const [selectedTL, setSelectedTL] = useState<string | null>(null)
 
   useEffect(() => {
     const ws = new WebSocket(`${WS_BASE}/ws`)
@@ -277,6 +412,36 @@ function App() {
     } catch (e) { console.error(e) }
   }, [])
 
+  const setScenario = useCallback(async (scenarioId: string) => {
+    try {
+      await fetch(`${API_BASE}/api/scenario/set`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ scenario_id: scenarioId })
+      })
+    } catch (e) { console.error(e) }
+  }, [])
+
+  const toggleGreenWave = useCallback(async (enable: boolean) => {
+    try {
+      if (enable) {
+        await fetch(`${API_BASE}/api/green-wave/apply`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ target_speed_kmh: 50 })
+        })
+      } else {
+        await fetch(`${API_BASE}/api/green-wave/disable`, { method: 'POST' })
+      }
+    } catch (e) { console.error(e) }
+  }, [])
+
+  const resetComparison = useCallback(async () => {
+    try {
+      await fetch(`${API_BASE}/api/kpi/reset-comparison`, { method: 'POST' })
+    } catch (e) { console.error(e) }
+  }, [])
+
   const avgSpeedKmh = simState.vehicles.length > 0
     ? (simState.vehicles.reduce((a, v) => a + v.speed, 0) / simState.vehicles.length * 3.6).toFixed(1)
     : '0.0'
@@ -288,6 +453,10 @@ function App() {
   const stoppedCount = simState.vehicles.filter(v => v.speed * 3.6 < 5).length
   const greenLights = simState.traffic_lights.filter(tl => Object.values(tl.edge_states).includes('Green')).length
   const adaptiveCount = simState.traffic_lights.filter(tl => tl.mode === 'adaptive').length
+
+  // Vehicle type counts
+  const typeCounts: Record<string, number> = {}
+  simState.vehicles.forEach(v => { typeCounts[v.type || 'car'] = (typeCounts[v.type || 'car'] || 0) + 1 })
 
   return (
     <div className="h-screen bg-slate-50 text-slate-800 flex flex-col font-sans overflow-hidden">
@@ -304,7 +473,13 @@ function App() {
             <p className="text-sm text-slate-500 font-medium mt-0.5">Bakı, Gənclik — Real-Vaxt IDM + Adaptiv İdarəetmə</p>
           </div>
         </div>
-        <div className="flex items-center gap-4">
+        <div className="flex items-center gap-3">
+          {/* Sim Clock */}
+          <div className="flex items-center gap-2 px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-full text-sm font-mono font-bold text-slate-700">
+            <Clock className="w-4 h-4 text-slate-400" />
+            {formatSimTime(simState.sim_clock || 0)}
+          </div>
+
           {/* Status Indicators */}
           <div className="flex items-center gap-4 px-5 py-2.5 bg-slate-50 border border-slate-200 rounded-full text-sm font-medium">
             <div className="flex items-center gap-2 border-r border-slate-200 pr-4">
@@ -316,6 +491,15 @@ function App() {
               <span className="text-slate-600"><b className="text-slate-800">{simState.total_intersections}</b> kəsişmə</span>
             </div>
           </div>
+
+          {/* Heatmap Toggle */}
+          <button onClick={() => setHeatmapOn(!heatmapOn)}
+            className={`modern-btn flex items-center gap-2 px-4 py-2.5 rounded-full text-sm font-semibold border cursor-pointer transition-all
+              ${heatmapOn ? 'bg-orange-100 text-orange-700 border-orange-300' : 'bg-white text-slate-500 border-slate-200 hover:border-slate-300'}`}
+          >
+            <Flame className="w-4 h-4" />
+            Heatmap
+          </button>
 
           <button onClick={toggleSimulation}
             className={`modern-btn flex items-center gap-2 px-5 py-2.5 rounded-full text-sm font-semibold text-white shadow-sm cursor-pointer
@@ -335,7 +519,7 @@ function App() {
 
       {/* Main Content */}
       <main className="flex-1 flex overflow-hidden">
-        {/* Map - Using a clean, light base map */}
+        {/* Map */}
         <div className="flex-1 relative bg-slate-100">
           <MapContainer
             center={[simState.center.lat, simState.center.lng]}
@@ -348,18 +532,28 @@ function App() {
               url="https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png"
             />
             <VehicleLayer vehicles={simState.vehicles} />
-            <TrafficLightLayer trafficLights={simState.traffic_lights} />
+            <TrafficLightLayer trafficLights={simState.traffic_lights} onSelect={(tl) => setSelectedTL(tl.node_id)} />
+            <HeatmapLayer vehicles={simState.vehicles} enabled={heatmapOn} />
           </MapContainer>
+
+          {/* Scenario Badge (floating on map) */}
+          {simState.scenario?.current_name && (
+            <div className="absolute top-4 left-4 z-[1000] bg-white/90 backdrop-blur-sm px-4 py-2 rounded-xl shadow-lg border border-slate-200/50 text-sm font-semibold text-slate-700 flex items-center gap-2">
+              {SCENARIO_ICONS[simState.scenario.current] || '📍'}
+              {simState.scenario.current_name}
+            </div>
+          )}
         </div>
 
         {/* Sidebar */}
-        <div className="w-[360px] shrink-0 bg-slate-50 border-l border-slate-200 flex flex-col overflow-hidden shadow-[-4px_0_15px_rgba(0,0,0,0.02)] z-10">
+        <div className="w-[380px] shrink-0 bg-slate-50 border-l border-slate-200 flex flex-col overflow-hidden shadow-[-4px_0_15px_rgba(0,0,0,0.02)] z-10">
           {/* Tabs */}
           <div className="flex flex-col p-4 bg-white border-b border-slate-200 shrink-0 gap-3">
             <h2 className="text-sm font-bold text-slate-800 px-1">Göstəricilər Paneli</h2>
             <div className="flex bg-slate-100 p-1 rounded-xl">
               {[
                 { id: 'analytics' as const, label: 'Analitika' },
+                { id: 'charts' as const, label: 'Qrafiklər' },
                 { id: 'congestion' as const, label: 'Sıxlıq' },
                 { id: 'control' as const, label: 'İdarəetmə' },
               ].map(tab => (
@@ -405,6 +599,37 @@ function App() {
                   />
                 </div>
 
+                {/* KPI Cards */}
+                {simState.kpi && (
+                  <div className="modern-card p-5">
+                    <h3 className="text-xs font-bold text-slate-500 uppercase tracking-wide mb-4 flex items-center gap-2">
+                      <Activity className="w-4 h-4" /> Performans Göstəriciləri (KPI)
+                    </h3>
+                    <div className="grid grid-cols-3 gap-3">
+                      <MiniKPI label="Throughput" value={simState.kpi.current_kpis.throughput_per_min} unit="maş/dəq" color="#0284c7" />
+                      <MiniKPI label="Gecikmə" value={simState.kpi.current_kpis.avg_delay_s} unit="san" color="#ef4444" />
+                      <MiniKPI label="Maks Növbə" value={simState.kpi.current_kpis.max_queue_length} unit="maşın" color="#f59e0b" />
+                    </div>
+                    <div className="mt-3 flex items-center justify-between text-xs text-slate-500 font-medium bg-slate-50 rounded-lg p-3 border border-slate-100">
+                      <span>Tamamlanmış: <b className="text-slate-700">{simState.kpi.summary.vehicles_completed}</b></span>
+                      <span>Ort. Yol: <b className="text-slate-700">{simState.kpi.summary.avg_travel_time}s</b></span>
+                    </div>
+                  </div>
+                )}
+
+                {/* Vehicle Types */}
+                <div className="modern-card p-5">
+                  <h3 className="text-xs font-bold text-slate-500 uppercase tracking-wide mb-4">Nəqliyyat Tipləri</h3>
+                  <div className="grid grid-cols-4 gap-2">
+                    {Object.entries(VEHICLE_TYPE_COLORS).map(([type, info]) => (
+                      <div key={type} className="flex flex-col items-center p-2 rounded-lg bg-slate-50 border border-slate-100">
+                        <span className="text-lg font-bold text-slate-800">{typeCounts[type] || 0}</span>
+                        <span className="text-[10px] font-semibold uppercase" style={{ color: info.body }}>{info.label}</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
                 <div className="modern-card p-5 mt-2">
                   <h3 className="text-xs font-bold text-slate-500 uppercase tracking-wide mb-4">İşıqforlar</h3>
                   <div className="flex items-center gap-4">
@@ -431,10 +656,136 @@ function App() {
               </>
             )}
 
+            {/* CHARTS TAB */}
+            {activeTab === 'charts' && (
+              <>
+                {/* Real-time Speed Chart */}
+                <div className="modern-card p-5">
+                  <h3 className="text-xs font-bold text-slate-500 uppercase tracking-wide mb-4 flex items-center gap-2">
+                    <TrendingUp className="w-4 h-4" /> Orta Sürət Dinamikası
+                  </h3>
+                  <ResponsiveContainer width="100%" height={180}>
+                    <AreaChart data={simState.kpi?.snapshots || []}>
+                      <defs>
+                        <linearGradient id="speedGrad" x1="0" y1="0" x2="0" y2="1">
+                          <stop offset="5%" stopColor="#0284c7" stopOpacity={0.3} />
+                          <stop offset="95%" stopColor="#0284c7" stopOpacity={0} />
+                        </linearGradient>
+                      </defs>
+                      <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
+                      <XAxis dataKey="time" tick={{ fontSize: 10 }} tickFormatter={(v) => formatSimTime(v)} />
+                      <YAxis tick={{ fontSize: 10 }} unit=" km/s" />
+                      <Tooltip formatter={(v: number) => [`${v} km/s`, 'Orta Sürət']} labelFormatter={(v) => `Vaxt: ${formatSimTime(v as number)}`} />
+                      <Area type="monotone" dataKey="avg_speed_kmh" stroke="#0284c7" fill="url(#speedGrad)" strokeWidth={2} />
+                    </AreaChart>
+                  </ResponsiveContainer>
+                </div>
+
+                {/* Throughput Chart */}
+                <div className="modern-card p-5">
+                  <h3 className="text-xs font-bold text-slate-500 uppercase tracking-wide mb-4 flex items-center gap-2">
+                    <BarChart3 className="w-4 h-4" /> Throughput & Gecikmə
+                  </h3>
+                  <ResponsiveContainer width="100%" height={180}>
+                    <LineChart data={simState.kpi?.snapshots || []}>
+                      <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
+                      <XAxis dataKey="time" tick={{ fontSize: 10 }} tickFormatter={(v) => formatSimTime(v)} />
+                      <YAxis yAxisId="left" tick={{ fontSize: 10 }} />
+                      <YAxis yAxisId="right" orientation="right" tick={{ fontSize: 10 }} />
+                      <Tooltip labelFormatter={(v) => `Vaxt: ${formatSimTime(v as number)}`} />
+                      <Legend wrapperStyle={{ fontSize: 11, fontWeight: 600 }} />
+                      <Line yAxisId="left" type="monotone" dataKey="throughput_per_min" name="Throughput (m/dəq)" stroke="#10b981" strokeWidth={2} dot={false} />
+                      <Line yAxisId="right" type="monotone" dataKey="avg_delay_s" name="Gecikmə (san)" stroke="#ef4444" strokeWidth={2} dot={false} />
+                    </LineChart>
+                  </ResponsiveContainer>
+                </div>
+
+                {/* Comparison: Fixed vs Adaptive */}
+                <div className="modern-card p-5 border-l-4 border-l-violet-500">
+                  <h3 className="text-xs font-bold text-slate-500 uppercase tracking-wide mb-2 flex items-center gap-2">
+                    <Layers className="w-4 h-4" /> Müqayisə: Sabit vs Adaptiv
+                  </h3>
+                  <p className="text-[11px] text-slate-400 mb-4">
+                    Əvvəlcə "Sabit" rejimə keçib bir müddət izləyin, sonra "Adaptiv" rejimə qayıdın. Fərqi burada görəcəksiniz.
+                  </p>
+                  
+                  {(simState.kpi?.comparison?.fixed?.length > 0 || simState.kpi?.comparison?.adaptive?.length > 0) ? (
+                    <>
+                      {/* Speed comparison */}
+                      <div className="mb-4">
+                        <span className="text-[10px] font-bold text-slate-500 uppercase">Orta Sürət Müqayisəsi</span>
+                        <ResponsiveContainer width="100%" height={140}>
+                          <LineChart>
+                            <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
+                            <XAxis dataKey="time" tick={{ fontSize: 9 }} tickFormatter={(v) => formatSimTime(v)} 
+                              type="number" domain={['dataMin', 'dataMax']} allowDuplicatedCategory={false} />
+                            <YAxis tick={{ fontSize: 9 }} unit=" km/s" />
+                            <Tooltip labelFormatter={(v) => `Vaxt: ${formatSimTime(v as number)}`} />
+                            <Legend wrapperStyle={{ fontSize: 10, fontWeight: 600 }} />
+                            <Line data={simState.kpi.comparison.fixed} dataKey="avg_speed_kmh" name="Sabit" stroke="#94a3b8" strokeWidth={2} dot={false} />
+                            <Line data={simState.kpi.comparison.adaptive} dataKey="avg_speed_kmh" name="Adaptiv" stroke="#0284c7" strokeWidth={2} dot={false} />
+                          </LineChart>
+                        </ResponsiveContainer>
+                      </div>
+
+                      {/* Delay comparison */}
+                      <div>
+                        <span className="text-[10px] font-bold text-slate-500 uppercase">Gecikmə Müqayisəsi</span>
+                        <ResponsiveContainer width="100%" height={140}>
+                          <LineChart>
+                            <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
+                            <XAxis dataKey="time" tick={{ fontSize: 9 }} tickFormatter={(v) => formatSimTime(v)} 
+                              type="number" domain={['dataMin', 'dataMax']} allowDuplicatedCategory={false} />
+                            <YAxis tick={{ fontSize: 9 }} unit=" s" />
+                            <Tooltip labelFormatter={(v) => `Vaxt: ${formatSimTime(v as number)}`} />
+                            <Legend wrapperStyle={{ fontSize: 10, fontWeight: 600 }} />
+                            <Line data={simState.kpi.comparison.fixed} dataKey="avg_delay_s" name="Sabit" stroke="#94a3b8" strokeWidth={2} dot={false} />
+                            <Line data={simState.kpi.comparison.adaptive} dataKey="avg_delay_s" name="Adaptiv" stroke="#ef4444" strokeWidth={2} dot={false} />
+                          </LineChart>
+                        </ResponsiveContainer>
+                      </div>
+                    </>
+                  ) : (
+                    <div className="text-center text-sm text-slate-400 py-8 bg-slate-50 rounded-xl border border-dashed border-slate-200">
+                      Hələ müqayisə verisi yoxdur.<br/>Əvvəlcə hər iki rejimi işlədin.
+                    </div>
+                  )}
+
+                  <button onClick={resetComparison}
+                    className="modern-btn w-full mt-4 py-2 text-xs font-bold rounded-lg bg-slate-100 text-slate-600 hover:bg-slate-200 border border-slate-200 cursor-pointer"
+                  >
+                    Müqayisə Verisini Sıfırla
+                  </button>
+                </div>
+
+                {/* Active Count Chart */}
+                <div className="modern-card p-5">
+                  <h3 className="text-xs font-bold text-slate-500 uppercase tracking-wide mb-4 flex items-center gap-2">
+                    <Car className="w-4 h-4" /> Aktiv Maşın Sayı
+                  </h3>
+                  <ResponsiveContainer width="100%" height={140}>
+                    <AreaChart data={simState.kpi?.snapshots || []}>
+                      <defs>
+                        <linearGradient id="countGrad" x1="0" y1="0" x2="0" y2="1">
+                          <stop offset="5%" stopColor="#10b981" stopOpacity={0.3} />
+                          <stop offset="95%" stopColor="#10b981" stopOpacity={0} />
+                        </linearGradient>
+                      </defs>
+                      <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
+                      <XAxis dataKey="time" tick={{ fontSize: 10 }} tickFormatter={(v) => formatSimTime(v)} />
+                      <YAxis tick={{ fontSize: 10 }} />
+                      <Tooltip labelFormatter={(v) => `Vaxt: ${formatSimTime(v as number)}`} />
+                      <Area type="monotone" dataKey="active_count" stroke="#10b981" fill="url(#countGrad)" strokeWidth={2} />
+                    </AreaChart>
+                  </ResponsiveContainer>
+                </div>
+              </>
+            )}
+
             {/* CONGESTION TAB */}
             {activeTab === 'congestion' && (
               <>
-                <h3 className="text-xs font-bold text-slate-500 uppercase tracking-widepx-1">Ən Sıx Yollar</h3>
+                <h3 className="text-xs font-bold text-slate-500 uppercase tracking-wide px-1">Ən Sıx Yollar</h3>
                 {simState.edge_congestion.length === 0 && (
                   <div className="modern-card p-8 text-center text-sm font-medium text-slate-500">Hələ məlumat yoxdur</div>
                 )}
@@ -476,7 +827,30 @@ function App() {
             {/* CONTROL TAB */}
             {activeTab === 'control' && (
               <>
-                <div className="modern-card p-5 border-l-4 border-l-sky-500 mb-2">
+                {/* Scenario Selection */}
+                <div className="modern-card p-5 border-l-4 border-l-violet-500">
+                  <h3 className="text-xs font-bold text-slate-500 uppercase tracking-wide mb-3 flex items-center gap-2">
+                    <Timer className="w-4 h-4" /> Ssenari Rejimi
+                  </h3>
+                  <div className="grid grid-cols-2 gap-2">
+                    {(simState.scenario?.scenarios || []).map(sc => (
+                      <button key={sc.id} onClick={() => setScenario(sc.id)}
+                        className={`modern-btn p-3 rounded-xl text-left border-2 cursor-pointer transition-all
+                          ${sc.active
+                            ? 'border-violet-400 bg-violet-50 shadow-sm'
+                            : `${SCENARIO_COLORS[sc.id] || 'bg-slate-50 border-slate-200 text-slate-700'} border hover:shadow-sm`
+                          }`}
+                      >
+                        <div className="text-lg mb-1">{SCENARIO_ICONS[sc.id] || '📍'}</div>
+                        <div className="text-xs font-bold">{sc.name_en}</div>
+                        <div className="text-[10px] opacity-70 mt-0.5">{sc.max_vehicles} maşın · {sc.spawn_interval}s</div>
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                {/* AI Control */}
+                <div className="modern-card p-5 border-l-4 border-l-sky-500">
                   <div className="flex items-center justify-between mb-3">
                     <div className="flex items-center gap-2">
                       <div className="bg-sky-100 p-1.5 rounded-lg text-sky-600"><Zap className="w-4 h-4" /></div>
@@ -503,6 +877,38 @@ function App() {
                   </div>
                 </div>
 
+                {/* Green Wave */}
+                <div className="modern-card p-5 border-l-4 border-l-emerald-500">
+                  <div className="flex items-center justify-between mb-3">
+                    <div className="flex items-center gap-2">
+                      <div className="bg-emerald-100 p-1.5 rounded-lg text-emerald-600">🌊</div>
+                      <span className="font-bold text-slate-800">Yaşıl Dalğa</span>
+                    </div>
+                    <span className={`text-xs px-2.5 py-1 rounded-full font-bold ${simState.green_wave?.active ? 'bg-emerald-100 text-emerald-700' : 'bg-slate-100 text-slate-500'}`}>
+                      {simState.green_wave?.active ? 'AKTİV' : 'QAPALI'}
+                    </span>
+                  </div>
+                  <p className="text-xs font-medium text-slate-500 mb-3 leading-relaxed">
+                    Koridor boyunca işıqforları sinxronlaşdırır — maşın 50 km/s sürətlə gedəndə hər növbəti işıqfor yaşıl olur.
+                  </p>
+                  <p className="text-[11px] text-slate-400 mb-3">
+                    Aşkar edilmiş koridorlar: <b className="text-slate-700">{simState.green_wave?.corridors_count || 0}</b>
+                  </p>
+                  <div className="flex gap-2">
+                    <button onClick={() => toggleGreenWave(true)}
+                      className="modern-btn flex-1 py-2 text-xs font-bold rounded-lg bg-emerald-500 text-white hover:bg-emerald-600 cursor-pointer"
+                    >
+                      Aktivləşdir
+                    </button>
+                    <button onClick={() => toggleGreenWave(false)}
+                      className="modern-btn flex-1 py-2 text-xs font-bold rounded-lg bg-slate-100 text-slate-600 hover:bg-slate-200 border border-slate-200 cursor-pointer"
+                    >
+                      Söndür
+                    </button>
+                  </div>
+                </div>
+
+                {/* Settings */}
                 <h3 className="text-xs font-bold text-slate-500 uppercase tracking-wide mt-2 px-1">Tənzimləmələr</h3>
                 <div className="modern-card p-5">
                   <div className="flex flex-col gap-3 font-medium text-sm text-slate-600">
@@ -537,8 +943,10 @@ function App() {
                           <span className="text-sm font-bold text-slate-800 font-mono">ID: {tl.node_id.substring(0, 8)}</span>
                         </div>
                         <span className={`text-[10px] uppercase font-bold px-2 py-0.5 rounded-full border 
-                          ${tl.mode === 'adaptive' ? 'bg-indigo-50 text-indigo-700 border-indigo-200' : 'bg-slate-100 text-slate-600 border-slate-200'}`}>
-                          {tl.mode === 'adaptive' ? 'S.İ.' : 'Sabit'}
+                          ${tl.mode === 'adaptive' ? 'bg-indigo-50 text-indigo-700 border-indigo-200' 
+                          : tl.mode === 'flash_yellow' ? 'bg-amber-50 text-amber-700 border-amber-200'
+                          : 'bg-slate-100 text-slate-600 border-slate-200'}`}>
+                          {tl.mode === 'adaptive' ? 'S.İ.' : tl.mode === 'flash_yellow' ? 'Gecə' : 'Sabit'}
                         </span>
                       </div>
                       <div className="flex items-center gap-0 text-xs font-medium text-slate-500 bg-slate-50 rounded-lg border border-slate-100 divide-x divide-slate-200">
@@ -553,6 +961,50 @@ function App() {
           </div>
         </div>
       </main>
+
+      {/* 3D Camera Modal */}
+      {selectedTL && (() => {
+        const liveTL = simState.traffic_lights.find(tl => tl.node_id === selectedTL)
+        if (!liveTL) return null
+        return (
+          <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/70 backdrop-blur-sm" onClick={() => setSelectedTL(null)}>
+            <div className="relative w-[90vw] max-w-[900px] h-[75vh] bg-[#12121f] rounded-2xl shadow-2xl border border-slate-700/50 overflow-hidden flex flex-col" onClick={e => e.stopPropagation()}>
+              {/* Modal Header */}
+              <div className="flex items-center justify-between px-5 py-3.5 bg-[#1a1a2e] border-b border-slate-700/50 shrink-0">
+                <div className="flex items-center gap-3">
+                  <div className="p-2 bg-sky-500/20 rounded-lg text-sky-400">
+                    <Video className="w-5 h-5" />
+                  </div>
+                  <div>
+                    <h2 className="text-white font-bold text-sm">Kəsişmə Kamerası — 3D Görüntü</h2>
+                    <p className="text-slate-400 text-xs font-mono mt-0.5">ID: {liveTL.node_id.substring(0, 12)}... · {liveTL.lat.toFixed(5)}, {liveTL.lng.toFixed(5)}</p>
+                  </div>
+                </div>
+                <button onClick={() => setSelectedTL(null)} className="p-2 rounded-lg hover:bg-slate-700/50 text-slate-400 hover:text-white transition-colors cursor-pointer">
+                  <X className="w-5 h-5" />
+                </button>
+              </div>
+
+              {/* 3D Viewport */}
+              <div className="flex-1 p-4">
+                <IntersectionCamera3D
+                  vehicles={simState.vehicles}
+                  cameraLat={liveTL.lat}
+                  cameraLng={liveTL.lng}
+                  edgeStates={liveTL.edge_states}
+                  edgeBearings={liveTL.edge_bearings || {}}
+                  outgoingBearings={liveTL.outgoing_bearings || {}}
+                  mode={liveTL.mode}
+                  phaseIndex={liveTL.phase_index}
+                  totalPhases={liveTL.total_phases}
+                  timeLeft={liveTL.time_left}
+                  nodeId={liveTL.node_id}
+                />
+              </div>
+            </div>
+          </div>
+        )
+      })()}
     </div>
   )
 }

@@ -31,6 +31,12 @@ class PhaseUpdate(BaseModel):
     phase_index: int
     duration: float
 
+class ScenarioSet(BaseModel):
+    scenario_id: str
+
+class GreenWaveApply(BaseModel):
+    target_speed_kmh: float = 50.0
+
 
 @app.on_event("startup")
 async def startup_event():
@@ -115,6 +121,58 @@ def toggle_simulation():
     """Pause/resume the simulation."""
     engine.running = not engine.running
     return {"running": engine.running}
+
+
+# --- Scenario Endpoints ---
+
+@app.get("/api/scenarios")
+def list_scenarios():
+    """List all available traffic scenarios."""
+    return engine.scenario_manager.to_dict()
+
+
+@app.post("/api/scenario/set")
+def set_scenario(body: ScenarioSet):
+    """Apply a traffic scenario (peak, normal, night, stress)."""
+    result = engine.scenario_manager.apply_scenario(body.scenario_id, engine)
+    return result
+
+
+# --- Green Wave Endpoints ---
+
+@app.post("/api/green-wave/apply")
+def apply_green_wave(body: GreenWaveApply):
+    """Apply green wave synchronization to detected corridors."""
+    # Re-detect corridors (in case new traffic lights were added)
+    engine.green_wave.detect_corridors(
+        engine.edges, engine.traffic_lights, engine.outgoing
+    )
+    result = engine.green_wave.apply_green_wave(
+        engine.traffic_lights, body.target_speed_kmh
+    )
+    return result
+
+
+@app.post("/api/green-wave/disable")
+def disable_green_wave():
+    """Disable green wave synchronization."""
+    engine.green_wave.disable()
+    return {"success": True, "active": False}
+
+
+# --- KPI Endpoints ---
+
+@app.get("/api/kpi")
+def get_kpi():
+    """Get current KPI data and full snapshot history."""
+    return engine.kpi_collector.to_dict()
+
+
+@app.post("/api/kpi/reset-comparison")
+def reset_kpi_comparison():
+    """Reset comparison data for a fresh fixed-vs-adaptive experiment."""
+    engine.kpi_collector.reset_comparison()
+    return {"success": True}
 
 
 # --- WebSocket ---
