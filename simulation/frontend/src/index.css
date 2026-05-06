@@ -1,118 +1,191 @@
 @import "tailwindcss";
 
+/* ── Font declarations ─────────────────────────────── */
 @theme {
-  --color-primary: #0284c7;
-  --color-primary-light: #e0f2fe;
-  --color-success: #10b981;
-  --color-danger: #ef4444;
-  --color-warning: #f59e0b;
-  --color-bg-main: #f8fafc;
-  --color-bg-card: #ffffff;
-  --color-text-main: #334155;
-  --color-text-muted: #64748b;
-  --color-border: #e2e8f0;
+  --font-display: 'Syne', system-ui, sans-serif;
+  --font-mono:    'JetBrains Mono', monospace;
 }
 
-*, *::before, *::after {
-  box-sizing: border-box;
-}
+*, *::before, *::after { box-sizing: border-box; }
 
-body {
+html, body {
   margin: 0;
   min-width: 320px;
   min-height: 100vh;
-  background-color: var(--color-bg-main);
-  color: var(--color-text-main);
-  font-family: 'Inter', system-ui, -apple-system, sans-serif;
+  background: var(--bg-body);
+  color: var(--t-hi);
+  font-family: 'Syne', system-ui, sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+  transition: background 0.25s, color 0.25s;
 }
 
-/* Cards & Layout */
+/* ── Dark theme (default) ──────────────────────────── */
+:root {
+  --bg-body:    #070d1a;
+  --bg-surface: #0a1220;
+  --t-hi:       #e2eaff;
+  --t-mid:      #7090b8;
+  --t-lo:       #3a5878;
+  --c-cyan:     #00d4ff;
+  --c-green:    #00e59a;
+  --c-red:      #ff5570;
+  --c-amber:    #ffa040;
+  --b-dim:      rgba(0,212,255,0.11);
+  --b-hi:       rgba(0,212,255,0.26);
+  --header-bg:  rgba(10,18,36,0.95);
+  --header-bd:  rgba(0,212,255,0.12);
+  --grid-dot:   rgba(0,212,255,0.055);
+  /* Card */
+  --card-bg-a:  rgba(14,28,54,0.95);
+  --card-bg-b:  rgba(10,20,44,0.95);
+  --card-bd:    rgba(0,212,255,0.11);
+  --card-bd-hv: rgba(0,212,255,0.22);
+  --card-glow:  rgba(0,212,255,0.07);
+  --card-sh:    0 4px 28px rgba(0,0,0,0.35);
+}
+
+/* ── Light theme ───────────────────────────────────── */
+[data-theme="light"] {
+  --bg-body:    #edf2fa;
+  --bg-surface: #f5f8ff;
+  --t-hi:       #0d1f3c;
+  --t-mid:      #4a6080;
+  --t-lo:       #8aaac8;
+  --c-cyan:     #0068d6;
+  --c-green:    #007858;
+  --c-red:      #cc2828;
+  --c-amber:    #b86800;
+  --b-dim:      rgba(0,70,180,0.12);
+  --b-hi:       rgba(0,70,180,0.28);
+  --header-bg:  rgba(245,248,255,0.97);
+  --header-bd:  rgba(0,70,180,0.12);
+  --grid-dot:   rgba(0,70,180,0.06);
+  /* Card */
+  --card-bg-a:  rgba(255,255,255,1);
+  --card-bg-b:  rgba(248,251,255,1);
+  --card-bd:    rgba(0,70,180,0.1);
+  --card-bd-hv: rgba(0,70,180,0.2);
+  --card-glow:  rgba(0,70,180,0.05);
+  --card-sh:    0 2px 16px rgba(0,30,100,0.07);
+}
+
+/* ── Dot-grid background overlay ──────────────────── */
+body::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  background-image: radial-gradient(var(--grid-dot) 1px, transparent 1px);
+  background-size: 28px 28px;
+  pointer-events: none;
+  z-index: 0;
+}
+
+/* ── Cards ─────────────────────────────────────────── */
 .modern-card {
-  background: var(--color-bg-card);
-  border: 1px solid var(--color-border);
-  border-radius: 12px;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.02), 0 4px 12px rgba(0, 0, 0, 0.02);
+  background: linear-gradient(135deg, var(--card-bg-a) 0%, var(--card-bg-b) 100%);
+  border: 1px solid var(--card-bd);
+  border-radius: 14px;
+  box-shadow: var(--card-sh), inset 0 1px 0 rgba(255,255,255,0.04);
+  backdrop-filter: blur(10px);
+  transition: border-color 0.25s, box-shadow 0.25s;
+}
+.modern-card:hover {
+  border-color: var(--card-bd-hv);
+  box-shadow: var(--card-sh), 0 0 22px var(--card-glow), inset 0 1px 0 rgba(255,255,255,0.04);
 }
 
-.modern-btn {
-  transition: all 0.2s ease;
+/* ── Buttons ────────────────────────────────────────── */
+.modern-btn { transition: all 0.18s ease; }
+.modern-btn:active { transform: scale(0.97); }
+
+/* ── Typography helpers ─────────────────────────────── */
+.data-num {
+  font-family: 'JetBrains Mono', monospace;
+  font-weight: 600;
+  letter-spacing: -0.02em;
 }
-.modern-btn:active {
-  transform: scale(0.97);
+.sec-label {
+  font-size: 0.62rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.14em;
+  color: var(--t-lo);
 }
 
-/* Leaflet Overrides */
-.leaflet-marker-icon {
-  transition: transform 0.1s linear !important;
+/* ── Animations ─────────────────────────────────────── */
+@keyframes fadeUp {
+  from { opacity: 0; transform: translateY(10px); }
+  to   { opacity: 1; transform: translateY(0); }
 }
+.fade-up { animation: fadeUp 0.4s ease forwards; }
 
+@keyframes livePulse { 0%,100%{opacity:1} 50%{opacity:0.55} }
+.live-dot { animation: livePulse 1.8s ease-in-out infinite; }
+
+/* ── Congestion bar ─────────────────────────────────── */
+@keyframes barFill { from { width: 0; } }
+.congestion-bar { animation: barFill 0.5s ease-out; transition: width 0.3s ease; }
+
+/* ── Leaflet ─────────────────────────────────────────── */
+.leaflet-marker-icon { transition: transform 0.1s linear !important; }
 .vehicle-marker, .traffic-light-marker {
   background: transparent !important;
   border: none !important;
 }
 
-/* SVG styling */
 .car-svg {
-  filter: drop-shadow(0 2px 4px rgba(0,0,0,0.15));
+  filter: drop-shadow(0 2px 6px rgba(0,0,0,0.45));
   transition: filter 0.2s ease;
 }
-.car-svg .car-body-fill {
-  fill: var(--car-color, #0ea5e9);
-  transition: fill 0.15s ease;
-}
-.car-svg .car-window {
-  fill: rgba(255, 255, 255, 0.5);
-}
-.car-svg .car-outline {
-  stroke: rgba(0, 0, 0, 0.1);
-  stroke-width: 0.5;
-  fill: none;
-}
+.car-svg .car-body-fill { fill: var(--car-color, #0ea5e9); transition: fill 0.15s ease; }
+.car-svg .car-window    { fill: rgba(255,255,255,0.42); }
+.car-svg .car-outline   { stroke: rgba(0,0,0,0.2); stroke-width: 0.5; fill: none; }
 
-/* Traffic Light Dots */
 .tl-dot {
-  width: 14px;
-  height: 14px;
+  width: 14px; height: 14px;
   border-radius: 50%;
-  border: 2px solid #ffffff;
-  box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+  border: 2px solid rgba(255,255,255,0.75);
+  box-shadow: 0 0 7px currentColor, 0 2px 4px rgba(0,0,0,0.3);
 }
 
 /* Tooltips */
 .vehicle-tooltip, .tl-tooltip {
-  background: #ffffff !important;
-  color: #334155 !important;
-  border: 1px solid #e2e8f0 !important;
-  border-radius: 8px !important;
+  background: var(--header-bg) !important;
+  color: var(--t-hi) !important;
+  border: 1px solid var(--b-hi) !important;
+  border-radius: 10px !important;
+  font-family: 'Syne', sans-serif !important;
   font-size: 12px !important;
   font-weight: 500 !important;
   padding: 8px 12px !important;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08) !important;
+  box-shadow: 0 6px 20px rgba(0,0,0,0.35) !important;
 }
-
 .vehicle-tooltip::before, .tl-tooltip::before {
-  border-top-color: #e2e8f0 !important;
+  border-top-color: var(--b-hi) !important;
 }
 
-/* Map credits */
+/* Leaflet controls */
+.leaflet-control-zoom a {
+  background: var(--bg-surface) !important;
+  color: var(--t-mid) !important;
+  border-color: var(--b-dim) !important;
+  font-family: 'Syne', sans-serif !important;
+}
+.leaflet-control-zoom a:hover {
+  background: var(--bg-body) !important;
+  color: var(--c-cyan) !important;
+}
 .leaflet-control-attribution {
-  background: rgba(255, 255, 255, 0.8) !important;
-  color: #64748b !important;
+  background: color-mix(in srgb, var(--bg-body) 88%, transparent) !important;
+  color: var(--t-lo) !important;
   font-size: 10px !important;
   border-top-left-radius: 4px;
 }
-.leaflet-control-attribution a {
-  color: #0284c7 !important;
-}
+.leaflet-control-attribution a { color: var(--c-cyan) !important; }
 
 /* Scrollbar */
-::-webkit-scrollbar { width: 4px; }
-::-webkit-scrollbar-track { background: transparent; }
-::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
-::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
-
-/* Congestion animations */
-@keyframes bar-fill { from { width: 0%; } }
-.congestion-bar { animation: bar-fill 0.5s ease-out; transition: width 0.3s ease; }
+::-webkit-scrollbar              { width: 4px; }
+::-webkit-scrollbar-track        { background: transparent; }
+::-webkit-scrollbar-thumb        { background: color-mix(in srgb, var(--c-cyan) 25%, transparent); border-radius: 4px; }
+::-webkit-scrollbar-thumb:hover  { background: color-mix(in srgb, var(--c-cyan) 45%, transparent); }
