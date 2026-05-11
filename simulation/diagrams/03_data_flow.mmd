@@ -1,0 +1,48 @@
+flowchart LR
+    subgraph Inputs["GİRİŞLƏR"]
+        Map[baku_map.json<br/>node + edge]
+        Conf[Senari konfiqi<br/>peak/normal/night/stress]
+        Cmd[REST əmrləri<br/>adaptive, green-wave, phase]
+    end
+
+    subgraph Processing["EMAL — SimulationEngine"]
+        Phys[Vehicle Fizikası<br/>IDM: a_max, b, T, s0, v0]
+        TL[İşıqforu növbələri<br/>fixed / adaptive / flash]
+        AC[Adaptive Control<br/>növbə uzunluğuna görə yaşıl]
+        GWp[Green Wave<br/>koridor offset hesablanması]
+        KPIa[KPI Aggregation<br/>delay, throughput, queue]
+    end
+
+    subgraph Outputs["NƏTİCƏLƏR"]
+        WSout[WebSocket state 10Hz<br/>vehicles, lights, congestion]
+        RESTout[REST /api/kpi<br/>snapshot tarixçəsi]
+        UI[Dashboard UI<br/>xəritə + qrafiklər]
+    end
+
+    Map --> Phys
+    Map --> TL
+    Conf --> Phys
+    Conf --> TL
+    Cmd --> AC
+    Cmd --> GWp
+    Cmd --> TL
+
+    Phys --> KPIa
+    TL --> KPIa
+    AC --> TL
+    GWp --> TL
+
+    Phys --> WSout
+    TL --> WSout
+    KPIa --> WSout
+    KPIa --> RESTout
+
+    WSout --> UI
+    RESTout --> UI
+
+    classDef inp fill:#fce4ec,stroke:#c2185b
+    classDef prc fill:#e8f5e9,stroke:#388e3c
+    classDef out fill:#e1f5ff,stroke:#0288d1
+    class Map,Conf,Cmd inp
+    class Phys,TL,AC,GWp,KPIa prc
+    class WSout,RESTout,UI out
