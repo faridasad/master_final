@@ -1,0 +1,42 @@
+graph LR
+    subgraph Physical["FİZİKİ DÜNYA (Bakı şəhəri)"]
+        Roads[Yol şəbəkəsi<br/>OSM məlumatları]
+        Sensors[Sensor / Trafik kameraları<br/>simulasiya kontekstində<br/>spawn hadisələri]
+        Vehicles_R[Real avtomobillər və<br/>sürücü davranışı]
+    end
+
+    subgraph Digital["RƏQƏMSAL ƏKİZ (Digital Twin)"]
+        Model[Riyazi Model<br/>IDM + işıqforu fazaları]
+        State[Cari Vəziyyət<br/>vehicle pozisiyaları, faza,<br/>növbə uzunluqları]
+        KPI_D[KPI Analizi<br/>delay, throughput, queue]
+    end
+
+    subgraph Decision["QƏRAR QƏBULU"]
+        Adapt_D[Adaptive Control<br/>növbəyə görə yaşıl]
+        GW_D[Green Wave<br/>koridor sinxronlaşması]
+        Scenario[Senari Sınağı<br/>peak/normal/night/stress]
+    end
+
+    Roads -->|topologiya| Model
+    Sensors -->|hadisə| Model
+    Vehicles_R -.->|müşahidə| Model
+
+    Model --> State
+    State --> KPI_D
+    KPI_D --> Adapt_D
+    KPI_D --> GW_D
+    KPI_D --> Scenario
+
+    Adapt_D -->|optimal faza vaxtı| Model
+    GW_D -->|offset cədvəli| Model
+    Scenario -->|spawn profili| Model
+
+    Adapt_D -.->|tövsiyə| Vehicles_R
+    GW_D -.->|tövsiyə| Vehicles_R
+
+    classDef phys fill:#fce4ec,stroke:#c2185b
+    classDef dig fill:#e8f5e9,stroke:#388e3c
+    classDef dec fill:#fff3e0,stroke:#f57c00
+    class Roads,Sensors,Vehicles_R phys
+    class Model,State,KPI_D dig
+    class Adapt_D,GW_D,Scenario dec
