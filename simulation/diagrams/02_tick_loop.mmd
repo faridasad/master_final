@@ -1,0 +1,31 @@
+flowchart TD
+    Start([Tick başlanır<br/>dt = 20 ms]) --> Clock[sim_clock += dt]
+    Clock --> SpawnCheck{spawn_timer ><br/>spawn_interval?}
+    SpawnCheck -->|Bəli| Spawn[1–3 yeni avtomobil əlavə et<br/>add_vehicle]
+    SpawnCheck -->|Xeyr| TLStep
+    Spawn --> TLStep[Hər işıqforu addımla<br/>tl.step dt]
+    TLStep --> AdaptStep[AdaptiveController.step<br/>30s-də bir növbə uzunluğunu yenilə]
+    AdaptStep --> EdgeLoop{Hər edge üçün}
+
+    EdgeLoop --> TLInfo[Edge sonu üçün<br/>işıqforu məsafəsi və vəziyyəti]
+    TLInfo --> VehLoop{Hər avtomobil üçün}
+    VehLoop --> IDM[vehicle.update<br/>IDM: lider + işıqfor]
+    IDM --> KPIRec[KPI: tick, dayanma,<br/>sürət qeyd et]
+    KPIRec --> VehLoop
+    VehLoop -->|Hamısı tamam| Transfer{Edge sonuna çatdı?}
+    Transfer -->|Bəli + yaşıl| MoveNext[transfer_vehicle<br/>növbəti edge-ə keç]
+    Transfer -->|Bəli + qırmızı/sarı| Hold[Kəsişmədə dayan<br/>speed = 0]
+    Transfer -->|Xeyr| Keep[Eyni edge-də qal]
+    MoveNext --> EdgeLoop
+    Hold --> EdgeLoop
+    Keep --> EdgeLoop
+
+    EdgeLoop -->|Bütün edge-lər| KPIStep[KPICollector.step<br/>orta sürət, növbə uzunluqları,<br/>rejim fixed/adaptive]
+    KPIStep --> End([Tick bitdi])
+
+    classDef io fill:#e1f5ff,stroke:#0288d1
+    classDef proc fill:#e8f5e9,stroke:#388e3c
+    classDef dec fill:#fff3e0,stroke:#f57c00
+    class Start,End io
+    class Clock,Spawn,TLStep,AdaptStep,TLInfo,IDM,KPIRec,MoveNext,Hold,Keep,KPIStep proc
+    class SpawnCheck,EdgeLoop,VehLoop,Transfer dec

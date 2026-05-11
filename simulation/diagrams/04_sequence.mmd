@@ -1,0 +1,36 @@
+sequenceDiagram
+    actor U as İstifadəçi
+    participant FE as Frontend
+    participant API as FastAPI REST
+    participant ENG as SimulationEngine
+    participant SIM as simulation_loop
+    participant WS as WebSocket
+
+    Note over SIM: Backend startup-da<br/>asyncio task kimi başlayır
+
+    U->>FE: Səhifəni aç
+    FE->>WS: WebSocket bağlantısı
+    WS-->>FE: accept
+
+    loop Hər 100 ms - 10 Hz
+        SIM->>ENG: step dt=20ms (x5)
+        ENG-->>SIM: daxili vəziyyət yenilənir
+        SIM->>ENG: get_state()
+        ENG-->>SIM: JSON state
+        SIM->>WS: send_text state
+        WS-->>FE: state payload
+        FE->>FE: xəritə + qrafiklər render
+    end
+
+    U->>FE: Peak Hour senarisini seç
+    FE->>API: POST /api/scenario/set
+    API->>ENG: scenario_manager.apply_scenario
+    ENG-->>API: success
+    API-->>FE: result
+    Note over SIM,FE: növbəti WS broadcast-da<br/>yeni spawn_interval və limitlər görsənir
+
+    U->>FE: Green Wave tətbiq et
+    FE->>API: POST /api/green-wave/apply
+    API->>ENG: green_wave.apply_green_wave
+    ENG-->>API: offset cədvəli
+    API-->>FE: success + corridor info

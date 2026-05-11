@@ -1,0 +1,56 @@
+graph LR
+    User([İstifadəçi<br/>Browser])
+
+    subgraph Frontend["Frontend (React + Vite, :5173)"]
+        App[App.tsx<br/>Dashboard]
+        Map[Leaflet Xəritə]
+        Charts[Recharts KPI Qrafikləri]
+        Controls[Senari / Adaptive / Green Wave<br/>İdarəetmə Paneli]
+    end
+
+    subgraph Backend["Backend (FastAPI, :8000)"]
+        REST[REST API<br/>/api/*]
+        WS[WebSocket<br/>/ws]
+        Loop[simulation_loop<br/>asyncio task]
+
+        subgraph Engine["SimulationEngine (core/engine.py)"]
+            Vehicles[Vehicle siyahısı<br/>IDM dinamikası]
+            Lights[İşıqfor siyahısı<br/>IntersectionTrafficLight]
+            Adapt[AdaptiveController<br/>30s yenilənmə]
+            GW[GreenWaveController]
+            Scen[ScenarioManager]
+            KPI[KPICollector<br/>5s snapshot]
+        end
+    end
+
+    Data[(baku_map.json<br/>nodes + edges)]
+
+    User -->|HTTP idarəetmə| REST
+    User -->|WS abunəlik| WS
+    REST --> Engine
+    Loop -->|state broadcast 10Hz| WS
+    WS -->|JSON state| App
+    App --> Map
+    App --> Charts
+    App --> Controls
+    Controls -->|POST| REST
+
+    Loop -->|step dt=20ms| Engine
+    Engine --> Vehicles
+    Engine --> Lights
+    Engine --> Adapt
+    Engine --> GW
+    Engine --> Scen
+    Engine --> KPI
+    Data -->|yüklənmə| Engine
+
+    classDef ext fill:#e1f5ff,stroke:#0288d1
+    classDef fe fill:#fff3e0,stroke:#f57c00
+    classDef be fill:#f3e5f5,stroke:#7b1fa2
+    classDef eng fill:#e8f5e9,stroke:#388e3c
+    classDef data fill:#fce4ec,stroke:#c2185b
+    class User ext
+    class App,Map,Charts,Controls fe
+    class REST,WS,Loop be
+    class Vehicles,Lights,Adapt,GW,Scen,KPI eng
+    class Data data
