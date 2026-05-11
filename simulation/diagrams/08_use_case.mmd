@@ -1,0 +1,35 @@
+graph TB
+    User((İstifadəçi<br/>Trafik analitik))
+
+    subgraph System["Digital Twin Sistemi"]
+        UC1[Real vaxt trafik vəziyyətinə bax]
+        UC2[Senari seç və tətbiq et]
+        UC3[Adaptive rejimi yandır/söndür]
+        UC4[Green Wave koridoru tətbiq et]
+        UC5[İşıqforu fazasını əl ilə dəyiş]
+        UC6[Simulyasiyanı dayandır/davam et]
+        UC7[KPI snapshot-larına bax]
+        UC8[Fixed vs Adaptive müqayisəsi]
+        UC9[Müqayisəni sıfırla<br/>yeni eksperiment]
+    end
+
+    User --> UC1
+    User --> UC2
+    User --> UC3
+    User --> UC4
+    User --> UC5
+    User --> UC6
+    User --> UC7
+    User --> UC8
+    User --> UC9
+
+    UC2 -.->|includes| UC1
+    UC3 -.->|extends| UC8
+    UC4 -.->|includes| UC1
+    UC8 -.->|includes| UC7
+    UC9 -.->|extends| UC8
+
+    classDef actor fill:#e1f5ff,stroke:#0288d1,stroke-width:2px
+    classDef uc fill:#fff3e0,stroke:#f57c00
+    class User actor
+    class UC1,UC2,UC3,UC4,UC5,UC6,UC7,UC8,UC9 uc

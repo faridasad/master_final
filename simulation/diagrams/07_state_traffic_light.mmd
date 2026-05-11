@@ -1,0 +1,35 @@
+stateDiagram-v2
+    [*] --> Fixed
+
+    state Fixed {
+        [*] --> Green_F
+        Green_F --> Yellow_F : timer bitdi
+        Yellow_F --> Red_F : timer bitdi
+        Red_F --> Green_F : növbəti faza
+        Green_F : Yaşıl<br/>sabit T_green
+        Yellow_F : Sarı<br/>sabit T_yellow
+        Red_F : Qırmızı<br/>sabit T_red
+    }
+
+    state Adaptive {
+        [*] --> Green_A
+        Green_A --> Yellow_A : timer bitdi
+        Yellow_A --> Red_A : timer bitdi
+        Red_A --> Green_A : növbəti faza
+        Green_A : Yaşıl<br/>T_green = f(queue_len)
+        Yellow_A : Sarı<br/>sabit T_yellow
+        Red_A : Qırmızı<br/>dinamik
+    }
+
+    state FlashYellow {
+        [*] --> Blink
+        Blink : Sarı yanıb-sönür<br/>(prioritet yoxdur)
+    }
+
+    Fixed --> Adaptive : adaptive yandır<br/>API /api/adaptive/toggle
+    Adaptive --> Fixed : adaptive söndür
+    Fixed --> FlashYellow : flash rejimi
+    Adaptive --> FlashYellow : flash rejimi
+    FlashYellow --> Fixed : normal rejimə qayıt
+
+    Adaptive --> Adaptive : GreenWave<br/>offset tətbiqi

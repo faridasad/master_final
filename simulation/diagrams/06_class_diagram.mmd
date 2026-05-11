@@ -1,0 +1,81 @@
+classDiagram
+    class SimulationEngine {
+        +map_data: dict
+        +edges: list
+        +vehicles: dict
+        +traffic_lights: dict
+        +sim_clock: float
+        +running: bool
+        +step(dt)
+        +add_vehicle()
+        +transfer_vehicle(v, edge)
+        +get_state()
+    }
+
+    class Vehicle {
+        +id: str
+        +lane: str
+        +position: float
+        +speed: float
+        +v0: float
+        +a_max: float
+        +b: float
+        +T: float
+        +s0: float
+        +vehicle_type: str
+        +update(dt, leading, tl_dist, tl_state)
+        +idm_acceleration(leading)
+    }
+
+    class IntersectionTrafficLight {
+        +node_id: str
+        +incoming_edge_ids: list
+        +phases: list
+        +current_phase: int
+        +mode: str
+        +step(dt)
+        +get_state_for_edge(eid)
+        +set_phase_duration(idx, dur)
+    }
+
+    class AdaptiveController {
+        +update_interval: float
+        +enabled_intersections: set
+        +step(dt, lights, counts)
+        +enable_for_intersection(tl)
+        +disable_for_intersection(tl)
+    }
+
+    class GreenWaveController {
+        +corridors: list
+        +active: bool
+        +detect_corridors(edges, lights, outgoing)
+        +apply_green_wave(lights, target_speed)
+        +disable()
+    }
+
+    class ScenarioManager {
+        +scenarios: dict
+        +current_scenario: str
+        +apply_scenario(id, engine)
+    }
+
+    class KPICollector {
+        +snapshot_interval: float
+        +snapshots: list
+        +total_delay: float
+        +throughput: int
+        +step(dt, active, avg_speed, stopped, queues)
+        +record_vehicle_completed(travel_time)
+        +record_vehicle_passed_intersection()
+    }
+
+    SimulationEngine "1" *-- "many" Vehicle : idarə edir
+    SimulationEngine "1" *-- "many" IntersectionTrafficLight : idarə edir
+    SimulationEngine "1" *-- "1" AdaptiveController : istifadə edir
+    SimulationEngine "1" *-- "1" GreenWaveController : istifadə edir
+    SimulationEngine "1" *-- "1" ScenarioManager : istifadə edir
+    SimulationEngine "1" *-- "1" KPICollector : istifadə edir
+    AdaptiveController ..> IntersectionTrafficLight : yeniləyir
+    GreenWaveController ..> IntersectionTrafficLight : offset tətbiq edir
+    Vehicle ..> IntersectionTrafficLight : reaksiya verir

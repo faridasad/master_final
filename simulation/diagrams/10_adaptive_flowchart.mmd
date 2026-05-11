@@ -1,0 +1,28 @@
+flowchart TD
+    Start([AdaptiveController.step dt]) --> AccumTime[update_timer += dt]
+    AccumTime --> Check{update_timer ><br/>update_interval 30s?}
+    Check -->|Xeyr| Return([Geri qayıt])
+    Check -->|Bəli| Reset[update_timer = 0]
+    Reset --> LoopTL{Hər enabled<br/>işıqfor üçün}
+
+    LoopTL --> CollectQ[Hər giriş edge üçün<br/>vehicle_count topla]
+    CollectQ --> TotalQ[Q_total = sum vehicle_count]
+    TotalQ --> ZeroCheck{Q_total > 0?}
+    ZeroCheck -->|Xeyr| DefaultDur[Default phase duration]
+    ZeroCheck -->|Bəli| LoopPhase{Hər faza üçün}
+
+    LoopPhase --> Proportion[T_green_i = T_min + T_total *<br/>vehicle_count_i / Q_total]
+    Proportion --> Clamp[T_min ≤ T_green_i ≤ T_max]
+    Clamp --> Apply[tl.set_phase_duration i, T_green_i]
+    Apply --> LoopPhase
+
+    LoopPhase -->|Bütün fazalar| LoopTL
+    DefaultDur --> LoopTL
+    LoopTL -->|Bütün işıqforlar| Return
+
+    classDef io fill:#e1f5ff,stroke:#0288d1
+    classDef proc fill:#e8f5e9,stroke:#388e3c
+    classDef dec fill:#fff3e0,stroke:#f57c00
+    class Start,Return io
+    class AccumTime,Reset,CollectQ,TotalQ,DefaultDur,Proportion,Clamp,Apply proc
+    class Check,LoopTL,ZeroCheck,LoopPhase dec

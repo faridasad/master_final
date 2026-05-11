@@ -1,0 +1,41 @@
+graph TB
+    subgraph Client["İstifadəçi Maşını"]
+        Browser["Web Browser<br/>Chrome / Firefox"]
+    end
+
+    subgraph Server["Server / Lokal kompüter"]
+        subgraph FENode["Node.js mühiti :5173"]
+            Vite["Vite Dev Server<br/>React 19 + TS"]
+            Static["Statik fayllar<br/>App.tsx, components"]
+        end
+
+        subgraph BENode["Python mühiti :8000"]
+            Uvicorn["Uvicorn ASGI<br/>FastAPI"]
+            Asyncio["asyncio event loop<br/>simulation_loop()"]
+            Engine_D["SimulationEngine<br/>+ alt modullar"]
+        end
+
+        subgraph FS["Fayl Sistemi"]
+            MapJSON[("baku_map.json")]
+            Snapshots[("KPI snapshot<br/>memory")]
+        end
+    end
+
+    Browser -->|HTTP :5173| Vite
+    Browser <-->|WebSocket :8000/ws| Uvicorn
+    Browser -->|REST :8000/api/*| Uvicorn
+
+    Vite --> Static
+    Uvicorn --> Asyncio
+    Asyncio --> Engine_D
+    Engine_D --> MapJSON
+    Engine_D --> Snapshots
+
+    classDef client fill:#e1f5ff,stroke:#0288d1
+    classDef fe fill:#fff3e0,stroke:#f57c00
+    classDef be fill:#f3e5f5,stroke:#7b1fa2
+    classDef fs fill:#fce4ec,stroke:#c2185b
+    class Browser client
+    class Vite,Static fe
+    class Uvicorn,Asyncio,Engine_D be
+    class MapJSON,Snapshots fs
