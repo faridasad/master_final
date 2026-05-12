@@ -1,0 +1,54 @@
+sequenceDiagram
+    participant BE as Backend<br/>(FastAPI / asyncio)
+    participant WS as WebSocket<br/>(/ws endpoint)
+    participant App as App.tsx<br/>(React root)
+    participant VL as VehicleLayer
+    participant TLL as TrafficLightLayer
+    participant HL as HeatmapLayer
+    participant SB as Sidebar<br/>(Analytics · Charts · Congestion · Control)
+    participant HDR as Header
+    participant CAM as IntersectionCamera3D<br/>(Three.js)
+
+    Note over BE: Simulation tick loop @ 50 Hz
+
+    BE->>WS: broadcast SimulationState JSON @ 10 Hz
+
+    WS-->>App: onmessage(event)
+    App->>App: JSON.parse(event.data)
+    App->>App: setSimState(parsed)
+
+    Note over App: React schedules re-render
+
+    par React reconciliation
+        App->>VL: vehicles[] prop
+        VL->>VL: diff markers by vehicle.id<br/>update lat/lng, bearing, color
+    and
+        App->>TLL: traffic_lights[] prop
+        TLL->>TLL: diff markers by node_id<br/>update color dot (R/Y/G)
+    and
+        App->>HL: vehicles[] + heatmapOn prop
+        HL->>HL: rebuild heatmap point array<br/>call heatLayer.setLatLngs()
+    and
+        App->>SB: kpi · scenario · edge_congestion<br/>green_wave · active_count
+        SB->>SB: update StatCard values<br/>append Recharts data points<br/>re-draw congestion bars
+    and
+        App->>HDR: sim_clock · status · wsStatus<br/>active_count · totals
+        HDR->>HDR: update clock display<br/>update status indicator
+    end
+
+    Note over App,CAM: Modal only active when selectedTL ≠ null
+
+    opt 3D Modal open (selectedTL set)
+        App->>CAM: vehicles · edgeStates · edgeBearings<br/>outgoingBearings · mode · phaseIndex · timeLeft
+        CAM->>CAM: useEffect → update edgeStatesRef, modeRef<br/>(no Three.js rebuild)
+        loop requestAnimationFrame @ ~60 fps
+            CAM->>CAM: lerp vehicle positions → road geometry<br/>update signal bulb R/Y/G colors<br/>flash_yellow: Date.now() % 1000 < 500
+        end
+    end
+
+    Note over WS,App: Connection lost → wsStatus = 'Əlaqə kəsilib'<br/>ws.onclose → attempt reconnect after 2 s
+
+    WS-->>App: onclose / onerror
+    App->>App: setWsStatus('Əlaqə kəsilib')
+    App->>App: setTimeout(connect, 2000)
+    App->>App: setWsStatus('Qoşulub') on reconnect

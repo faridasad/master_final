@@ -1,0 +1,69 @@
+flowchart TD
+    App["🖥️ App\n(root component)"]
+
+    App --> Header["Header\n(navbar)"]
+    App --> Main["main\n(flex layout)"]
+    App --> Modal["3D Modal\n(conditional)"]
+
+    Header --> Logo["Logo + Title"]
+    Header --> SimClock["Sim Clock"]
+    Header --> NetInfo["Network Info\n(edges / intersections)"]
+    Header --> HeatBtn["Heatmap Toggle"]
+    Header --> PlayBtn["Play / Pause"]
+    Header --> WsStatus["WS Status Indicator"]
+    Header --> ThemeBtn["Theme Toggle"]
+
+    Main --> MapContainer["MapContainer\n(react-leaflet)"]
+    Main --> ScenarioBadge["Scenario Badge\n(floating overlay)"]
+    Main --> Sidebar["Sidebar\n(w-380px)"]
+
+    MapContainer --> TileLayer["TileLayer\n(CartoDB tiles)"]
+    MapContainer --> VehicleLayer["VehicleLayer\n(L.marker × N)"]
+    MapContainer --> TrafficLightLayer["TrafficLightLayer\n(L.marker × N)"]
+    MapContainer --> HeatmapLayer["HeatmapLayer\n(L.heatLayer)"]
+
+    Sidebar --> TabBar["Tab Bar\n(Analitika · Qrafiklər · Sıxlıq · İdarəetmə)"]
+    Sidebar --> TabContent["Tab Content\n(scrollable)"]
+
+    TabContent --> AnalyticsTab["Analytics Tab"]
+    TabContent --> ChartsTab["Charts Tab"]
+    TabContent --> CongestionTab["Congestion Tab"]
+    TabContent --> ControlTab["Control Tab"]
+
+    AnalyticsTab --> StatCard1["StatCard\n(Avg Speed)"]
+    AnalyticsTab --> StatCard2["StatCard\n(Max Speed)"]
+    AnalyticsTab --> StatCard3["StatCard\n(Active Vehicles)"]
+    AnalyticsTab --> StatCard4["StatCard\n(Stopped)"]
+    AnalyticsTab --> KPICards["KPI Cards"]
+    AnalyticsTab --> LOSSection["LOS Grades A–F"]
+
+    KPICards --> MiniKPI1["MiniKPI\n(Throughput)"]
+    KPICards --> MiniKPI2["MiniKPI\n(Delay)"]
+    KPICards --> MiniKPI3["MiniKPI\n(Queue)"]
+    KPICards --> MiniKPI4["MiniKPI\n(CO₂)"]
+    KPICards --> MiniKPI5["MiniKPI\n(Travel Time)"]
+
+    ChartsTab --> SpeedChart["LineChart\n(Speed comparison)"]
+    ChartsTab --> ThroughputChart["LineChart\n(Throughput & Delay)"]
+    ChartsTab --> QueueChart["AreaChart\n(Queue Length)"]
+    ChartsTab --> RadarChart["RadarChart\n(Fixed vs Adaptive)"]
+    ChartsTab --> ResetBtn["Reset Comparison"]
+
+    CongestionTab --> EdgeList["Edge List\n(congestion bars × N)"]
+
+    ControlTab --> AdaptiveToggle["Adaptive Controller\n(toggle + settings)"]
+    ControlTab --> ScenarioSelector["Scenario Selector\n(radio buttons)"]
+    ControlTab --> GreenWaveToggle["Green Wave Toggle\n+ corridors info"]
+
+    Modal --> ModalHeader["Modal Header\n(close button)"]
+    Modal --> IntersectionCamera3D["IntersectionCamera3D\n(Three.js)"]
+
+    IntersectionCamera3D --> ThreeCanvas["Three.js Canvas\n(WebGL, ref-mounted)"]
+    IntersectionCamera3D --> Scene3D["3D Scene\n(roads · signals · vehicles)"]
+    IntersectionCamera3D --> StatusBar["Status Bar\n(phase · time left · count)"]
+
+    style App fill:#1e40af,color:#fff,stroke:#1e40af
+    style MapContainer fill:#065f46,color:#fff,stroke:#065f46
+    style Sidebar fill:#4c1d95,color:#fff,stroke:#4c1d95
+    style IntersectionCamera3D fill:#7c2d12,color:#fff,stroke:#7c2d12
+    style Modal fill:#7c2d12,color:#fff,stroke:#7c2d12

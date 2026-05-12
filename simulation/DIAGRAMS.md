@@ -10,6 +10,7 @@ Bu sənəd simulyasiya layihəsi üçün hazırlanmış bütün diaqram və qraf
 - **Bölmə D** — Green Wave və koridor analizi (#21)
 - **Bölmə E** — Xəritə vizuallaşdırmaları (#22–#24)
 - **Bölmə F** — Müqayisəli analiz (#25–#26)
+- **Bölmə G** — Frontend DOM strukturu (#27–#31)
 
 ---
 
@@ -236,6 +237,54 @@ simulation/backend/venv/Scripts/python.exe simulation/scripts/plot_empirical.py
 simulation/backend/venv/Scripts/python.exe simulation/scripts/plot_greenwave_map_compare.py
 ```
 
+### 6. DOM struktur diaqramları (G bölməsi)
+
+```bash
+# Mermaid (27-29)
+cd simulation/diagrams
+for f in 27_component_tree 28_state_data_flow 29_ws_render_sequence; do
+  npx @mermaid-js/mermaid-cli -i $f.mmd -o $f.png -t dark -b '#0f172a' -w 1600 -H 1200
+done
+
+# Python (30-31)
+source simulation/backend/venv/bin/activate
+python simulation/scripts/plot_dom_structure.py
+```
+
+---
+
+## G. Frontend DOM Strukturu
+
+### 27. React Komponent Ağacı
+
+![Component Tree](diagrams/27_component_tree.png)
+
+App kök komponentindən başlayaraq bütün uşaq komponentlərə qədər tam iyerarxiya: Header, MapContainer (VehicleLayer · TrafficLightLayer · HeatmapLayer), Sidebar (4 tab × alt komponentlər), Modal (IntersectionCamera3D / Three.js).
+
+### 28. State və Məlumat Axını
+
+![State Data Flow](diagrams/28_state_data_flow.png)
+
+6 `useState` dəyişəninin (`simState`, `theme`, `activeTab`, `heatmapOn`, `selectedTL`, `wsStatus`) hər birinin hansı komponentlərə təsir etdiyi. `simState` mərkəzi hub olaraq WS payload-ı paylayır.
+
+### 29. WebSocket → DOM Render Sequence
+
+![WS Render Sequence](diagrams/29_ws_render_sequence.png)
+
+Backend-dən 10 Hz JSON yayımı → `onmessage` → `setSimState` → React paralel rekonsilyasiyası → hər layer/tab/header-in ayrıca yenilənməsi. Reconnect məntiqi və 3D modal animasiya dövrü də daxildir.
+
+### 30. DOM Yenilənmə Matriksi
+
+![DOM Update Matrix](diagrams/30_dom_update_matrix.png)
+
+WS mesaj sahələri (sütunlar) × React komponentlər (sıralər) cross-reference heatmap. ✓ işarəsi — sahə birbaşa o komponenti yeniləyir.
+
+### 31. Komponent Coupling Qrafı
+
+![Component Coupling](diagrams/31_component_coupling.png)
+
+Yönlü prop-passing / callback asılılıq qrafı. Düyün ölçüsü prop sayına mütənasibdir. Rənglər komponent qrupunu göstərir (map · ui · atom · charts · 3d · overlay).
+
 ---
 
 ## Bonus: Frontend Ekran Görüntüləri
@@ -289,3 +338,8 @@ cd simulation/frontend && npm run dev
 | 24 | Corridors map | `plot_greenwave_map_compare.py` | matplotlib |
 | 25 | Fixed vs adaptive | `plot_greenwave_map_compare.py` | matplotlib |
 | 26 | Scenario radar | `plot_greenwave_map_compare.py` | matplotlib |
+| 27 | Komponent ağacı | `27_component_tree.mmd` | Mermaid |
+| 28 | State / data flow | `28_state_data_flow.mmd` | Mermaid |
+| 29 | WS → DOM sequence | `29_ws_render_sequence.mmd` | Mermaid |
+| 30 | DOM yenilənmə matriksi | `plot_dom_structure.py` | matplotlib |
+| 31 | Komponent coupling qrafı | `plot_dom_structure.py` | networkx + matplotlib |
