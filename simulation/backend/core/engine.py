@@ -1,11 +1,10 @@
-import time
 import random
 import json
 import math
 from models.vehicle import Vehicle, VEHICLE_TYPES
 from models.traffic_light import IntersectionTrafficLight
 from core.adaptive_controller import AdaptiveController
-from core.kpi_collector import KPICollector
+from core.kpi_collector import KPICollector, speed_to_co2_g_per_s
 from core.scenario_manager import ScenarioManager
 from core.green_wave import GreenWaveController
 
@@ -207,6 +206,9 @@ class SimulationEngine:
                 
                 # KPI tracking
                 self.kpi_collector.record_vehicle_tick()
+                self.kpi_collector.record_vehicle_emission(
+                    speed_to_co2_g_per_s(v.speed, v.vehicle_type) * dt
+                )
                 if v.speed < 1.0:
                     self.kpi_collector.record_vehicle_stopped(dt)
                     stopped_count += 1
@@ -315,6 +317,23 @@ class SimulationEngine:
                     }
             tl_data["edge_bearings"] = edge_bearings
             tl_data["outgoing_bearings"] = outgoing_bearings
+
+            # Per-intersection LOS: queue density proxy (vehicles/lane on incoming edges)
+            incoming_vehicles = sum(len(self.vehicles.get(eid, [])) for eid in tl.incoming_edge_ids)
+            total_lanes = sum(
+                self.edge_map.get(eid, {}).get("lanes", 1)
+                for eid in tl.incoming_edge_ids
+            )
+            q_per_lane = incoming_vehicles / max(total_lanes, 1)
+            if q_per_lane < 2:     tl_los = "A"
+            elif q_per_lane < 4:   tl_los = "B"
+            elif q_per_lane < 6:   tl_los = "C"
+            elif q_per_lane < 8:   tl_los = "D"
+            elif q_per_lane < 12:  tl_los = "E"
+            else:                  tl_los = "F"
+            tl_data["los_grade"] = tl_los
+            tl_data["queue_per_lane"] = round(q_per_lane, 1)
+
             traffic_lights_data.append(tl_data)
         
         # Congestion per edge (for dashboard)

@@ -2,15 +2,16 @@ import { useEffect, useRef, useMemo } from 'react'
 import * as THREE from 'three'
 
 interface VehicleData {
-  id: string; lat: number; lng: number; bearing: number
+  id: string
+  lane: string      // edge ID — used to snap vehicle to the correct 3D road
+  position: number  // meters from u-node along the edge
   speed: number; type: string; length: number
+  lat: number; lng: number; bearing: number  // kept for rotation only
 }
-
 interface EdgeBearing {
   bearing: number; length_m: number; name?: string; lanes?: number
 }
-
-interface IntersectionCamera3DProps {
+interface Props {
   vehicles: VehicleData[]
   cameraLat: number; cameraLng: number
   edgeStates: Record<string, string>
@@ -21,451 +22,413 @@ interface IntersectionCamera3DProps {
   nodeId: string
 }
 
-const VEHICLE_COLORS = {
-  car: 0x3b82f6, suv: 0x6366f1, bus: 0xd97706, truck: 0xea580c
+// Geographic bearing → Three.js XZ direction vector
+// 0° = North = -Z  |  90° = East = +X  |  180° = South = +Z  |  270° = West = -X
+function bDir(deg: number): THREE.Vector3 {
+  const r = (deg * Math.PI) / 180
+  return new THREE.Vector3(Math.sin(r), 0, -Math.cos(r))
 }
 
-// Global cache for vehicle procedural models so we don't recreate geometries on every render
-const VEHICLE_MESH_CACHE = new Map<string, THREE.Group>()
-
-function getProceduralVehicle(type: string, colorHex: number): THREE.Group {
-  const cacheKey = `${type}_${colorHex}`
-  if (VEHICLE_MESH_CACHE.has(cacheKey)) {
-    return VEHICLE_MESH_CACHE.get(cacheKey)!.clone()
+// Low-poly vehicle — front of vehicle faces local +Z
+function makeVehicle(type: string): THREE.Group {
+  const COLORS: Record<string, number> = {
+    car: 0x3b82f6, suv: 0x8b5cf6, bus: 0xf59e0b, truck: 0xef4444,
   }
-
-  const group = new THREE.Group()
-  const mat = new THREE.MeshStandardMaterial({ color: colorHex, roughness: 0.4, metalness: 0.3 })
-  const blackMat = new THREE.MeshStandardMaterial({ color: 0x111111, roughness: 0.9 })
-  const glassMat = new THREE.MeshStandardMaterial({ color: 0x050510, metalness: 0.9, roughness: 0.1 })
+  const g = new THREE.Group()
+  const col = COLORS[type] ?? 0x6b7280
+  const mat = new THREE.MeshLambertMaterial({ color: col })
 
   if (type === 'bus') {
-    const w = 2.8, h = 3.0, l = 11.0
-    const body = new THREE.Mesh(new THREE.BoxGeometry(w, h, l), mat)
-    body.position.y = h/2 + 0.5
-    group.add(body)
-    
-    const fw = new THREE.Mesh(new THREE.PlaneGeometry(w*0.9, h*0.6), glassMat)
-    fw.position.set(0, h/2 + 0.8, l/2 + 0.02)
-    group.add(fw)
-    
-    const rw = new THREE.Mesh(new THREE.PlaneGeometry(w*0.9, h*0.4), glassMat)
-    rw.position.set(0, h/2 + 0.8, -l/2 - 0.02)
-    rw.rotation.y = Math.PI
-    group.add(rw)
-
-    const sideGlassGeom = new THREE.PlaneGeometry(l*0.8, h*0.4)
-    const sw1 = new THREE.Mesh(sideGlassGeom, glassMat)
-    sw1.position.set(w/2 + 0.02, h/2 + 0.8, 0)
-    sw1.rotation.y = Math.PI/2
-    group.add(sw1)
-    const sw2 = new THREE.Mesh(sideGlassGeom, glassMat)
-    sw2.position.set(-w/2 - 0.02, h/2 + 0.8, 0)
-    sw2.rotation.y = -Math.PI/2
-    group.add(sw2)
-
-    const tireGeom = new THREE.CylinderGeometry(0.5, 0.5, 0.4, 16)
-    tireGeom.rotateZ(Math.PI / 2)
-    const wheelPos = [
-      [w/2, 0.5, l*0.3], [-w/2, 0.5, l*0.3], 
-      [w/2, 0.5, -l*0.3], [-w/2, 0.5, -l*0.3] 
-    ]
-    wheelPos.forEach(p => {
-      const t = new THREE.Mesh(tireGeom, blackMat)
-      t.position.set(p[0], p[1], p[2])
-      group.add(t)
-    })
+    const body = new THREE.Mesh(new THREE.BoxGeometry(2.5, 2.6, 10), mat)
+    body.position.y = 1.6; g.add(body)
   } else if (type === 'truck') {
-    const w = 2.6, h = 3.2, l = 9.0
-    const cabin = new THREE.Mesh(new THREE.BoxGeometry(w, h*0.85, 2.5), mat)
-    cabin.position.set(0, h*0.425 + 0.5, l/2 - 1.25)
-    group.add(cabin)
-    
-    const tMat = new THREE.MeshStandardMaterial({ color: 0xdddddd }) 
-    const trailer = new THREE.Mesh(new THREE.BoxGeometry(w, h, l - 3.0), tMat)
-    trailer.position.set(0, h/2 + 0.6, -1.5)
-    group.add(trailer)
-
-    const tireGeom = new THREE.CylinderGeometry(0.5, 0.5, 0.4, 16)
-    tireGeom.rotateZ(Math.PI / 2)
-    const wheelPos = [
-      [w/2, 0.5, l/2 - 1.2], [-w/2, 0.5, l/2 - 1.2], 
-      [w/2, 0.5, -1.0], [-w/2, 0.5, -1.0],
-      [w/2, 0.5, -3.0], [-w/2, 0.5, -3.0]
-    ]
-    wheelPos.forEach(p => {
-      const t = new THREE.Mesh(tireGeom, blackMat)
-      t.position.set(p[0], p[1], p[2])
-      group.add(t)
-    })
+    const cab = new THREE.Mesh(new THREE.BoxGeometry(2.3, 2.8, 2.5), mat)
+    cab.position.set(0, 1.7, 3.25); g.add(cab)
+    const tr = new THREE.Mesh(new THREE.BoxGeometry(2.3, 2.4, 5.5),
+      new THREE.MeshLambertMaterial({ color: 0xd1d5db }))
+    tr.position.set(0, 1.5, -2.25); g.add(tr)
+  } else if (type === 'suv') {
+    const body = new THREE.Mesh(new THREE.BoxGeometry(2.0, 1.1, 4.5), mat)
+    body.position.y = 0.85; g.add(body)
+    const top = new THREE.Mesh(new THREE.BoxGeometry(1.8, 0.8, 2.4), mat)
+    top.position.set(0, 1.8, -0.3); g.add(top)
   } else {
-    const isSuv = type === 'suv'
-    const w = isSuv ? 2.0 : 1.8, h = isSuv ? 0.9 : 0.7, l = isSuv ? 4.8 : 4.2
-    
-    const bodyGeom = new THREE.BoxGeometry(w, h, l)
-    const body = new THREE.Mesh(bodyGeom, mat)
-    body.position.y = h/2 + 0.3
-    group.add(body)
-    
-    const cabinGeom = new THREE.BoxGeometry(w * 0.85, h * 0.8, l * 0.5)
-    const cabin = new THREE.Mesh(cabinGeom, mat)
-    cabin.position.set(0, h + 0.3 + (h*0.4), -0.2)
-    group.add(cabin)
-
-    const fw = new THREE.Mesh(new THREE.PlaneGeometry(w*0.8, h*0.8), glassMat)
-    fw.position.set(0, cabin.position.y, cabin.position.z + (l*0.25) + 0.01)
-    fw.rotation.x = -0.3
-    group.add(fw)
-
-    const rw = new THREE.Mesh(new THREE.PlaneGeometry(w*0.8, h*0.8), glassMat)
-    rw.position.set(0, cabin.position.y, cabin.position.z - (l*0.25) - 0.01)
-    rw.rotation.x = Math.PI + 0.3
-    group.add(rw)
-
-    const tireGeom = new THREE.CylinderGeometry(0.35, 0.35, 0.2, 16)
-    tireGeom.rotateZ(Math.PI / 2)
-    const wheelPos = [
-      [w/2, 0.35, l*0.3], [-w/2, 0.35, l*0.3], 
-      [w/2, 0.35, -l*0.3], [-w/2, 0.35, -l*0.3] 
-    ]
-    wheelPos.forEach(p => {
-      const t = new THREE.Mesh(tireGeom, blackMat)
-      t.position.set(p[0], p[1], p[2])
-      group.add(t)
-    })
+    const body = new THREE.Mesh(new THREE.BoxGeometry(1.8, 0.85, 4.0), mat)
+    body.position.y = 0.725; g.add(body)
+    const top = new THREE.Mesh(new THREE.BoxGeometry(1.55, 0.65, 2.0), mat)
+    top.position.set(0, 1.5, -0.15); g.add(top)
   }
-  
-  // Expose these materials by name so we can override emissive later based on speed
-  const hlMat = new THREE.MeshStandardMaterial({ color: 0xffffff, emissive: 0xffffee, emissiveIntensity: 1.0 })
-  const tlMat = new THREE.MeshStandardMaterial({ color: 0xff0000, emissive: 0xff0000, emissiveIntensity: 0.5 })
-  
-  const getDims = () => {
-    if (type === 'bus') return {w:2.8, h:3.0, l:11.0}
-    if (type === 'truck') return {w:2.6, h:3.2, l:9.0}
-    return type === 'suv' ? {w:2.0, h:0.9, l:4.8} : {w:1.8, h:0.7, l:4.2}
-  }
-  const dims = getDims()
-  
-  const frontPlane = new THREE.Mesh(new THREE.PlaneGeometry(dims.w*0.3, 0.2), hlMat)
-  frontPlane.position.set(dims.w*0.35, dims.h*0.6, dims.l/2 + 0.01)
-  frontPlane.name = "headlight"
-  group.add(frontPlane)
-  const fp2 = frontPlane.clone(); fp2.position.x = -dims.w*0.35; fp2.name = "headlight"; group.add(fp2)
 
-  const backPlane = new THREE.Mesh(new THREE.PlaneGeometry(dims.w*0.3, 0.2), tlMat)
-  backPlane.position.set(dims.w*0.35, dims.h*0.6, -dims.l/2 - 0.01)
-  backPlane.rotation.y = Math.PI
-  backPlane.name = "taillight"
-  group.add(backPlane)
-  const bp2 = backPlane.clone(); bp2.position.x = -dims.w*0.35; bp2.name = "taillight"; group.add(bp2)
-  
-  group.traverse(child => {
-    if ((child as THREE.Mesh).isMesh) {
-      child.castShadow = true; child.receiveShadow = true
-    }
-  })
-  
-  VEHICLE_MESH_CACHE.set(cacheKey, group)
-  return group.clone()
+  // Tail-light strip at back (-Z face)
+  const halfZ = type === 'bus' ? 5 : type === 'truck' ? 8 / 2 : type === 'suv' ? 2.25 : 2.0
+  const tlMat = new THREE.MeshBasicMaterial({ color: 0xff2200 })
+  const tl = new THREE.Mesh(new THREE.PlaneGeometry(1.4, 0.18), tlMat)
+  tl.position.set(0, 0.9, -(halfZ + 0.01))
+  tl.rotation.y = Math.PI
+  tl.name = 'taillight'
+  g.add(tl)
+
+  g.traverse(c => { if ((c as THREE.Mesh).isMesh) { c.castShadow = true; c.receiveShadow = true } })
+  return g
 }
 
-// Maps lat/lng to roughly meters relative to the intersection center
-function latlngToMeters(dlat: number, dlng: number, refLat: number) {
-  const mPerLat = 111320
-  const mPerLng = 111320 * Math.cos((refLat * Math.PI) / 180)
-  return { x: dlng * mPerLng, z: -dlat * mPerLat } // -Z is Geographic North in our 3D space
-}
-
-function getGeoVector(angleDeg: number) {
-  const rad = angleDeg * Math.PI / 180
-  return { x: Math.sin(rad), z: -Math.cos(rad) }
+interface Signal {
+  r: THREE.MeshStandardMaterial
+  y: THREE.MeshStandardMaterial
+  g: THREE.MeshStandardMaterial
+  pLight: THREE.PointLight
 }
 
 export default function IntersectionCamera3D({
-  vehicles, cameraLat, cameraLng, edgeStates, mode,
-  edgeBearings, outgoingBearings,
-  phaseIndex, totalPhases, timeLeft, nodeId
-}: IntersectionCamera3DProps) {
+  vehicles, cameraLat, cameraLng,
+  edgeStates, edgeBearings, outgoingBearings,
+  mode, phaseIndex, totalPhases, timeLeft,
+}: Props) {
   const mountRef = useRef<HTMLDivElement>(null)
-  
+
+  // Refs so animation loop reads latest values without re-triggering scene rebuild
+  const modeRef = useRef(mode)
+  const edgeStatesRef = useRef(edgeStates)
+  useEffect(() => { modeRef.current = mode }, [mode])
+  useEffect(() => { edgeStatesRef.current = edgeStates }, [edgeStates])
+
   const sceneRef = useRef<{
+    renderer: THREE.WebGLRenderer
     scene: THREE.Scene
     camera: THREE.PerspectiveCamera
-    renderer: THREE.WebGLRenderer
-    vehicleMeshes: Map<string, THREE.Group>
-    trafficLightGlows: Map<string, { r: THREE.Material, y: THREE.Material, g: THREE.Material }>
-    animationId: number
+    animId: number
+    vehicles: Map<string, THREE.Group>
+    signals: Map<string, Signal>
   } | null>(null)
 
-  const nearbyVehicles = useMemo(() => {
-    return vehicles.filter(v => {
-      const dlat = Math.abs(v.lat - cameraLat)
-      const dlng = Math.abs(v.lng - cameraLng)
-      return dlat < 0.0015 && dlng < 0.002 // within ~150-200m
-    })
-  }, [vehicles, cameraLat, cameraLng])
+  // Only show vehicles whose lane is an edge connected to THIS intersection
+  const nearby = useMemo(() =>
+    vehicles.filter(v => v.lane in edgeBearings || v.lane in outgoingBearings),
+    [vehicles, edgeBearings, outgoingBearings]
+  )
 
+  // ── Scene init ────────────────────────────────────────────────────────────
   useEffect(() => {
-    if (!mountRef.current) return
-    const container = mountRef.current
-    const width = container.clientWidth
-    const height = container.clientHeight
+    const el = mountRef.current
+    if (!el) return
+    const W = el.clientWidth, H = el.clientHeight
 
-    const scene = new THREE.Scene()
-    scene.background = new THREE.Color(0x1a1a2e)
-    scene.fog = new THREE.FogExp2(0x1a1a2e, 0.006)
-
-    const camera = new THREE.PerspectiveCamera(55, width / height, 0.1, 500)
-    // Dynamic camera height based on intersection complexity, but generally CCTV style.
-    camera.position.set(-15, 35, 25)
-    camera.lookAt(0, 0, 0)
-
-    const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: false })
-    renderer.setSize(width, height)
-    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2))
+    const renderer = new THREE.WebGLRenderer({ antialias: true })
+    renderer.setSize(W, H)
+    renderer.setPixelRatio(Math.min(devicePixelRatio, 2))
     renderer.shadowMap.enabled = true
     renderer.shadowMap.type = THREE.PCFSoftShadowMap
-    container.appendChild(renderer.domElement)
+    el.appendChild(renderer.domElement)
 
-    // Lighting
-    scene.add(new THREE.AmbientLight(0x404060, 0.8))
-    const dirLight = new THREE.DirectionalLight(0xffeedd, 1.2)
-    dirLight.position.set(50, 80, 20)
-    dirLight.castShadow = true
-    dirLight.shadow.mapSize.width = 1024
-    dirLight.shadow.mapSize.height = 1024
-    dirLight.shadow.camera.near = 1
-    dirLight.shadow.camera.far = 200
-    dirLight.shadow.camera.left = -80
-    dirLight.shadow.camera.right = 80
-    dirLight.shadow.camera.top = 80
-    dirLight.shadow.camera.bottom = -80
-    scene.add(dirLight)
-    
-    // Intersection core
-    const groundMat = new THREE.MeshStandardMaterial({ color: 0x22222a, roughness: 0.9 })
-    const baseGround = new THREE.Mesh(new THREE.PlaneGeometry(300, 300), groundMat)
-    baseGround.rotation.x = -Math.PI / 2
-    baseGround.position.y = -0.1
-    baseGround.receiveShadow = true
-    scene.add(baseGround)
+    const scene = new THREE.Scene()
+    scene.background = new THREE.Color(0x1e293b)
+    scene.fog = new THREE.Fog(0x1e293b, 130, 270)
 
-    const roadMat = new THREE.MeshStandardMaterial({ color: 0x33333d, roughness: 0.8 })
-    
-    // Central junction rounding
-    const centerGeom = new THREE.CylinderGeometry(15, 15, 0.1, 32)
-    const centerMesh = new THREE.Mesh(centerGeom, roadMat)
-    centerMesh.position.y = -0.05
-    scene.add(centerMesh)
+    // CCTV camera: elevated, angled down at intersection
+    const camera = new THREE.PerspectiveCamera(50, W / H, 0.1, 500)
+    camera.position.set(0, 45, 38)
+    camera.lookAt(0, 0, 0)
 
-    const trafficLightGlows = new Map()
+    // Lighting — low-poly game style
+    scene.add(new THREE.AmbientLight(0xffffff, 2.4))
+    const sun = new THREE.DirectionalLight(0xfff8e7, 2.2)
+    sun.position.set(40, 70, 40)
+    sun.castShadow = true
+    sun.shadow.mapSize.setScalar(2048)
+    sun.shadow.camera.left = -100; sun.shadow.camera.right = 100
+    sun.shadow.camera.top = 100; sun.shadow.camera.bottom = -100
+    sun.shadow.camera.far = 250
+    scene.add(sun)
+    const fill = new THREE.DirectionalLight(0x90b8ff, 0.5)
+    fill.position.set(-30, 30, -30)
+    scene.add(fill)
 
-    function drawRoadSegment(angleDeg: number, length: number) {
-      const roadW = 12 // Sufficient for Multi-lane
-      const geom = new THREE.PlaneGeometry(roadW, length)
-      geom.translate(0, length / 2, 0)
-      geom.rotateX(-Math.PI / 2)
-      geom.rotateY(-angleDeg * Math.PI / 180)
-      
-      const mesh = new THREE.Mesh(geom, roadMat)
-      mesh.position.y = 0.01
-      mesh.receiveShadow = true
-      scene.add(mesh)
+    // Ground
+    const ground = new THREE.Mesh(
+      new THREE.PlaneGeometry(400, 400),
+      new THREE.MeshLambertMaterial({ color: 0x1a2535 })
+    )
+    ground.rotation.x = -Math.PI / 2
+    ground.receiveShadow = true
+    scene.add(ground)
+
+    const ROAD_W = 12   // road width (m)
+    const ROAD_LEN = 85 // road length from center (m)
+    const PAD_R = 9     // central junction pad radius (m)
+
+    const roadMat = new THREE.MeshLambertMaterial({ color: 0x4b5563 })
+    const whiteMat = new THREE.MeshBasicMaterial({ color: 0xffffff, side: THREE.DoubleSide })
+    const yellowMat = new THREE.MeshBasicMaterial({ color: 0xfbbf24, side: THREE.DoubleSide })
+
+    // Central junction pad
+    const pad = new THREE.Mesh(new THREE.CylinderGeometry(PAD_R, PAD_R, 0.08, 32), roadMat)
+    pad.position.y = 0.01; pad.receiveShadow = true
+    scene.add(pad)
+
+    // Build a road segment extending from center in direction `fromCenterBearing`
+    function addRoad(fromCenterBearing: number) {
+      const dir = bDir(fromCenterBearing)
+      // group: local +Z aligns with dir, centered at midpoint of road
+      const groupRotY = Math.atan2(dir.x, dir.z)
+      const centerDist = PAD_R + ROAD_LEN / 2  // center of road from intersection
+
+      const grp = new THREE.Group()
+      grp.rotation.y = groupRotY
+      grp.position.set(dir.x * centerDist, 0, dir.z * centerDist)
+
+      // Surface
+      const surf = new THREE.Mesh(new THREE.PlaneGeometry(ROAD_W, ROAD_LEN), roadMat)
+      surf.rotation.x = -Math.PI / 2; surf.receiveShadow = true
+      grp.add(surf)
+
+      // Dashed center line (local Z: -ROAD_LEN/2 = near intersection, +ROAD_LEN/2 = far)
+      const SL = 3.0, SG = 2.5 // stripe length, gap
+      for (let z = -ROAD_LEN / 2 + 2; z < ROAD_LEN / 2 - SL; z += SL + SG) {
+        const s = new THREE.Mesh(new THREE.PlaneGeometry(0.2, SL), yellowMat)
+        s.rotation.x = -Math.PI / 2; s.position.set(0, 0.02, z + SL / 2)
+        grp.add(s)
+      }
+
+      // Stop line near intersection end (local z ≈ -ROAD_LEN/2 + 2)
+      const stop = new THREE.Mesh(new THREE.PlaneGeometry(ROAD_W - 1, 0.6), whiteMat)
+      stop.rotation.x = -Math.PI / 2; stop.position.set(0, 0.02, -ROAD_LEN / 2 + 2)
+      grp.add(stop)
+
+      // Lane edge lines
+      for (const side of [-1, 1]) {
+        const edge = new THREE.Mesh(new THREE.PlaneGeometry(0.15, ROAD_LEN), whiteMat)
+        edge.rotation.x = -Math.PI / 2; edge.position.set(side * (ROAD_W / 2 - 0.2), 0.02, 0)
+        grp.add(edge)
+      }
+
+      scene.add(grp)
     }
 
-    function createTrafficLightPole(x: number, z: number, angleDeg: number, eid: string) {
-      const rotY = -angleDeg * Math.PI / 180
-      const pole = new THREE.Mesh(new THREE.CylinderGeometry(0.15, 0.15, 8, 8), new THREE.MeshStandardMaterial({ color: 0x555555, metalness: 0.8 }))
-      pole.position.set(x, 4, z)
-      pole.castShadow = true
+    // Build traffic light for an incoming edge
+    const signals = new Map<string, Signal>()
+
+    function addTrafficLight(incomingBearing: number, eid: string) {
+      // Direction road extends from center (toward where traffic comes from)
+      const along = bDir(incomingBearing + 180)
+      // Right side of driver approaching at incomingBearing
+      const right = bDir(incomingBearing + 90)
+
+      const dist = 13, offset = 6.5
+      const px = along.x * dist + right.x * offset
+      const pz = along.z * dist + right.z * offset
+
+      // Pole
+      const pole = new THREE.Mesh(
+        new THREE.CylinderGeometry(0.12, 0.15, 7, 8),
+        new THREE.MeshLambertMaterial({ color: 0x6b7280 })
+      )
+      pole.position.set(px, 3.5, pz); pole.castShadow = true
       scene.add(pole)
 
-      const housing = new THREE.Mesh(new THREE.BoxGeometry(0.8, 2.4, 0.6), new THREE.MeshStandardMaterial({ color: 0x111111 }))
-      housing.position.set(x, 7.5, z)
-      housing.rotation.y = rotY
+      // Housing — faces the approaching driver (faceDir = along = toward where traffic comes from)
+      const faceDir = along
+      const hRotY = Math.atan2(faceDir.x, faceDir.z)
+      const housing = new THREE.Mesh(
+        new THREE.BoxGeometry(0.7, 2.1, 0.45),
+        new THREE.MeshLambertMaterial({ color: 0x111827 })
+      )
+      housing.position.set(px, 7.0, pz)
+      housing.rotation.y = hRotY
+      housing.castShadow = true
       scene.add(housing)
 
-      const createBulb = (y: number, hex: number) => {
-        const mat = new THREE.MeshStandardMaterial({ color: hex, emissive: hex, emissiveIntensity: 0.2 })
-        const bulb = new THREE.Mesh(new THREE.SphereGeometry(0.25, 16, 16), mat)
-        bulb.position.set(x, y, z + Math.cos(rotY) * 0.35)
-        scene.add(bulb)
+      // Point light (active signal glow)
+      const pLight = new THREE.PointLight(0xff0000, 0, 18)
+      pLight.position.set(px + faceDir.x * 0.8, 7.0, pz + faceDir.z * 0.8)
+      scene.add(pLight)
+
+      // Bulbs offset from housing face
+      const bx = px + faceDir.x * 0.28
+      const bz = pz + faceDir.z * 0.28
+
+      function makeBulb(y: number, hex: number): THREE.MeshStandardMaterial {
+        const mat = new THREE.MeshStandardMaterial({
+          color: hex, emissive: hex, emissiveIntensity: 0.1,
+          roughness: 0.3, metalness: 0.05,
+        })
+        const b = new THREE.Mesh(new THREE.SphereGeometry(0.21, 10, 10), mat)
+        b.position.set(bx, y, bz)
+        scene.add(b)
         return mat
       }
-      const rMat = createBulb(8.3, 0x550000)
-      const yMat = createBulb(7.5, 0x554400)
-      const gMat = createBulb(6.7, 0x005500)
 
-      trafficLightGlows.set(eid, { r: rMat, y: yMat, g: gMat })
+      const r = makeBulb(7.9, 0x3b0000)
+      const y = makeBulb(7.2, 0x3b2800)
+      const gm = makeBulb(6.5, 0x003b00)
+      signals.set(eid, { r, y, g: gm, pLight })
     }
 
-    // Process Incoming Edges -> they extend AWAY from center at angle (bearing - 180)
+    // Build roads + lights from edge data
     Object.entries(edgeBearings).forEach(([eid, eb]) => {
-      const roadAngle = eb.bearing - 180
-      drawRoadSegment(roadAngle, 120)
-      
-      // Place traffic light for this specific road
-      const dir = getGeoVector(roadAngle)
-      const right = getGeoVector(roadAngle + 90) // Right side of road when looking TO the center
-      const tx = dir.x * 12 + right.x * 7
-      const tz = dir.z * 12 + right.z * 7
-      
-      createTrafficLightPole(tx, tz, roadAngle, eid)
+      addRoad(eb.bearing + 180)      // road extends toward where traffic comes from
+      addTrafficLight(eb.bearing, eid)
     })
-
-    // Process Outgoing Edges -> they extend from center at angle (bearing)
     Object.values(outgoingBearings).forEach(ob => {
-      drawRoadSegment(ob.bearing, 120)
+      addRoad(ob.bearing)            // road extends in outgoing direction
     })
 
-    const vehicleMeshes = new Map()
+    const vehicleMeshes = new Map<string, THREE.Group>()
 
     sceneRef.current = {
-      scene, camera, renderer, vehicleMeshes, trafficLightGlows, animationId: 0
+      renderer, scene, camera, animId: 0,
+      vehicles: vehicleMeshes, signals,
     }
 
-    let pX = camera.position.x, pZ = camera.position.z
+    // Animation loop — also handles signal updates (so flash_yellow actually flashes)
+    let animId = 0
     function animate() {
+      animId = requestAnimationFrame(animate)
       if (!sceneRef.current) return
-      sceneRef.current.animationId = requestAnimationFrame(animate)
-      
-      // Dynamic subtle camera hover
-      const t = Date.now() * 0.0002
-      camera.position.x = pX + Math.sin(t) * 3
-      camera.position.y = 35 + Math.cos(t) * 1.5
+
+      // Subtle CCTV hover
+      const t = Date.now() * 0.00012
+      camera.position.x = Math.sin(t) * 3.5
+      camera.position.y = 45
+      camera.position.z = 38 + Math.cos(t * 0.6) * 2
       camera.lookAt(0, 0, 0)
+
+      // Signal update every frame (enables real flash)
+      const flash = (Date.now() % 900) > 450
+      const curMode = modeRef.current
+      const curStates = edgeStatesRef.current
+
+      signals.forEach(({ r, y, g, pLight }, eid) => {
+        r.color.setHex(0x3b0000); r.emissiveIntensity = 0.08
+        y.color.setHex(0x3b2800); y.emissiveIntensity = 0.08
+        g.color.setHex(0x003b00); g.emissiveIntensity = 0.08
+
+        if (curMode === 'flash_yellow') {
+          if (flash) {
+            y.color.setHex(0xfbbf24); y.emissiveIntensity = 6
+            pLight.color.setHex(0xfbbf24); pLight.intensity = 25
+          } else {
+            pLight.intensity = 0
+          }
+        } else {
+          const state = curStates[eid] ?? 'Red'
+          if (state === 'Green') {
+            g.color.setHex(0x22c55e); g.emissiveIntensity = 6
+            pLight.color.setHex(0x22c55e); pLight.intensity = 22
+          } else if (state === 'Yellow') {
+            y.color.setHex(0xfbbf24); y.emissiveIntensity = 6
+            pLight.color.setHex(0xfbbf24); pLight.intensity = 22
+          } else {
+            r.color.setHex(0xef4444); r.emissiveIntensity = 6
+            pLight.color.setHex(0xef4444); pLight.intensity = 22
+          }
+        }
+      })
 
       renderer.render(scene, camera)
     }
     animate()
 
     const onResize = () => {
-      camera.aspect = container.clientWidth / container.clientHeight
+      camera.aspect = el.clientWidth / el.clientHeight
       camera.updateProjectionMatrix()
-      renderer.setSize(container.clientWidth, container.clientHeight)
+      renderer.setSize(el.clientWidth, el.clientHeight)
     }
     window.addEventListener('resize', onResize)
 
     return () => {
+      cancelAnimationFrame(animId)
       window.removeEventListener('resize', onResize)
-      if (sceneRef.current) cancelAnimationFrame(sceneRef.current.animationId)
       renderer.dispose()
-      if (container.contains(renderer.domElement)) container.removeChild(renderer.domElement)
+      if (el.contains(renderer.domElement)) el.removeChild(renderer.domElement)
+      sceneRef.current = null
     }
-  }, [cameraLat, cameraLng, edgeBearings, outgoingBearings]) // Rebuild if coordinates or road topology changes completely
+  }, [cameraLat, cameraLng, edgeBearings, outgoingBearings])
 
-  // Update Vehicles
+  // ── Vehicle updates ───────────────────────────────────────────────────────
   useEffect(() => {
-    if (!sceneRef.current) return
-    const { scene, vehicleMeshes } = sceneRef.current
+    const s = sceneRef.current
+    if (!s) return
+    const { scene, vehicles: meshMap } = s
 
-    const activeIds = new Set(nearbyVehicles.map(v => v.id))
-
-    vehicleMeshes.forEach((mesh, id) => {
-      if (!activeIds.has(id)) {
-        scene.remove(mesh)
-        vehicleMeshes.delete(id)
-      }
+    const activeIds = new Set(nearby.map(v => v.id))
+    meshMap.forEach((mesh, id) => {
+      if (!activeIds.has(id)) { scene.remove(mesh); meshMap.delete(id) }
     })
 
-    nearbyVehicles.forEach(v => {
-      const pos = latlngToMeters(v.lat - cameraLat, v.lng - cameraLng, cameraLat)
-      // ThreeJS Rotation: 0 means front (+Z) points to +Z.
-      // Geographic Bearing 0 means vehicle travels towards North (-Z).
-      // If +Z faces -Z, we rotate by PI.
-      const targetRotY = -(v.bearing * Math.PI) / 180 + Math.PI
+    nearby.forEach(v => {
+      // ── Compute world position from edge lane + position ──────────────────
+      // This snaps vehicles exactly onto the drawn 3D roads.
+      // Incoming edge: u=far node → v=intersection. Vehicle travels at eb.bearing.
+      //   distFromIntersection = length_m - v.position
+      //   worldPos = bDir(eb.bearing + 180) * distFromIntersection
+      // Outgoing edge: u=intersection → v=far node. Vehicle travels at ob.bearing.
+      //   worldPos = bDir(ob.bearing) * v.position
+      const eb = edgeBearings[v.lane]
+      const ob = outgoingBearings[v.lane]
+      let p: THREE.Vector3
+      let travelBearing: number
+      if (eb) {
+        travelBearing = eb.bearing
+        const distFromCenter = Math.max(0, eb.length_m - v.position)
+        p = bDir(eb.bearing + 180).multiplyScalar(distFromCenter)
+      } else if (ob) {
+        travelBearing = ob.bearing
+        p = bDir(ob.bearing).multiplyScalar(v.position)
+      } else {
+        return
+      }
+      // Offset vehicle to right lane (2.5m right of road center for right-hand traffic)
+      const rightOffset = bDir(travelBearing + 90).multiplyScalar(2.5)
+      p.add(rightOffset)
 
-      let mesh = vehicleMeshes.get(v.id)
+      const targetRotY = Math.PI - (travelBearing * Math.PI) / 180
+
+      let mesh = meshMap.get(v.id)
       if (!mesh) {
-        const vColor = VEHICLE_COLORS[v.type as keyof typeof VEHICLE_COLORS] || VEHICLE_COLORS.car
-        mesh = getProceduralVehicle(v.type, vColor)
-        mesh.position.set(pos.x, 0, pos.z)
+        mesh = makeVehicle(v.type)
+        mesh.position.set(p.x, 0, p.z)
         mesh.rotation.y = targetRotY
         scene.add(mesh)
-        vehicleMeshes.set(v.id, mesh)
+        meshMap.set(v.id, mesh)
       } else {
-        // Smooth interpolation
-        mesh.position.x += (pos.x - mesh.position.x) * 0.4
-        mesh.position.z += (pos.z - mesh.position.z) * 0.4
-        // Angle lerping handles wrapping correctly (basic diff check)
+        mesh.position.x += (p.x - mesh.position.x) * 0.35
+        mesh.position.z += (p.z - mesh.position.z) * 0.35
         let diff = targetRotY - mesh.rotation.y
-        while (diff < -Math.PI) diff += Math.PI * 2
         while (diff > Math.PI) diff -= Math.PI * 2
-        mesh.rotation.y += diff * 0.4
+        while (diff < -Math.PI) diff += Math.PI * 2
+        mesh.rotation.y += diff * 0.35
       }
 
-      // Brake lights / dynamic effects
-      const speedKmh = v.speed * 3.6
-      mesh.traverse((m: any) => {
-        if (m.name === 'taillight' && m.material) {
-          m.material.emissiveIntensity = speedKmh < 3 ? 3.0 : 0.5
-        }
+      const kmh = v.speed * 3.6
+      mesh.traverse((c: any) => {
+        if (c.name === 'taillight' && c.material)
+          (c.material as THREE.MeshBasicMaterial).color.setHex(kmh < 3 ? 0xff2200 : 0x550000)
       })
     })
-  }, [nearbyVehicles, cameraLat, cameraLng])
-
-  // Update specific traffic light states
-  useEffect(() => {
-    if (!sceneRef.current) return
-    const { trafficLightGlows } = sceneRef.current
-
-    trafficLightGlows.forEach(({ r, y, g }, eid) => {
-      const state = edgeStates[eid] || 'Red'
-      
-      // Dim all 
-      ;(r as THREE.MeshStandardMaterial).color.setHex(0x550000)
-      ;(r as THREE.MeshStandardMaterial).emissiveIntensity = 0.2
-      ;(y as THREE.MeshStandardMaterial).color.setHex(0x554400)
-      ;(y as THREE.MeshStandardMaterial).emissiveIntensity = 0.2
-      ;(g as THREE.MeshStandardMaterial).color.setHex(0x005500)
-      ;(g as THREE.MeshStandardMaterial).emissiveIntensity = 0.2
-
-      // Brighten active
-      if (mode === 'flash_yellow') {
-        const flash = (Date.now() % 1000) > 500
-        if (flash) {
-          ;(y as THREE.MeshStandardMaterial).color.setHex(0xffff00)
-          ;(y as THREE.MeshStandardMaterial).emissiveIntensity = 4.0
-        }
-      } else {
-        if (state === 'Green') {
-          ;(g as THREE.MeshStandardMaterial).color.setHex(0x00ff00)
-          ;(g as THREE.MeshStandardMaterial).emissiveIntensity = 4.0
-        } else if (state === 'Yellow') {
-          ;(y as THREE.MeshStandardMaterial).color.setHex(0xffaa00)
-          ;(y as THREE.MeshStandardMaterial).emissiveIntensity = 4.0
-        } else {
-          ;(r as THREE.MeshStandardMaterial).color.setHex(0xff0000)
-          ;(r as THREE.MeshStandardMaterial).emissiveIntensity = 4.0
-        }
-      }
-    })
-  }, [edgeStates, mode])
+  }, [nearby, edgeBearings, outgoingBearings])
 
   return (
     <div className="flex flex-col h-full bg-[#12121f]">
-      {/* 3D Viewport container */}
-      <div ref={mountRef} className="flex-1 rounded-t-lg overflow-hidden border-b border-slate-700/50" />
-
-      {/* Info HUD */}
+      <div ref={mountRef} className="flex-1 overflow-hidden border-b border-slate-700/50" />
       <div className="bg-[#1a1a2e] px-5 py-3 flex items-center justify-between shrink-0">
         <div className="flex items-center gap-4 text-xs font-mono">
           <div className="flex items-center gap-2">
             <span className="text-slate-400">FAZA</span>
-            <span className="text-white font-bold bg-white/10 px-2 py-0.5 rounded">{phaseIndex + 1}/{totalPhases}</span>
+            <span className="text-white font-bold bg-white/10 px-2 py-0.5 rounded">
+              {phaseIndex + 1}/{totalPhases}
+            </span>
           </div>
           <div className="flex items-center gap-2">
             <span className="text-slate-400">QALAN VAXT</span>
-            <span className="text-amber-400 font-bold bg-amber-400/10 px-2 py-0.5 rounded">{timeLeft}s</span>
+            <span className="text-amber-400 font-bold bg-amber-400/10 px-2 py-0.5 rounded">
+              {timeLeft}s
+            </span>
           </div>
         </div>
-        
-        <div className="flex items-center gap-4 text-xs">
-          <span className="text-slate-400">
-            Kamera Rəsmiləşdirməsi: <span className="text-sky-400 font-medium ml-1">Real-Vaxt Nöqtəvi</span>
-          </span>
+        <div className="flex items-center gap-3 text-xs">
+          <span className="text-slate-500">Real-Vaxt 3D</span>
           <span className="bg-sky-500/20 text-sky-400 px-3 py-1 rounded-full font-bold">
-            {nearbyVehicles.length} MAŞIN
+            {nearby.length} MAŞIN
           </span>
         </div>
       </div>

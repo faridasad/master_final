@@ -1,0 +1,85 @@
+flowchart LR
+    WS(["🔌 WebSocket\n/ws · 10 Hz"])
+    WS -->|"JSON payload"| simState
+
+    subgraph State ["React State (App.tsx useState)"]
+        simState["simState\nSimulationState"]
+        theme["theme\n'dark' | 'light'"]
+        activeTab["activeTab\n'analytics' | 'charts'\n'congestion' | 'control'"]
+        heatmapOn["heatmapOn\nboolean"]
+        selectedTL["selectedTL\nstring | null"]
+        wsStatus["wsStatus\n'Qoşulub' | 'Əlaqə kəsilib'"]
+    end
+
+    subgraph WsFields ["WS Payload Fields"]
+        F1["vehicles[]"]
+        F2["traffic_lights[]"]
+        F3["kpi{...}"]
+        F4["scenario{...}"]
+        F5["green_wave{...}"]
+        F6["edge_congestion[]"]
+        F7["status · sim_clock\nactive_count · totals"]
+    end
+
+    simState --> F1
+    simState --> F2
+    simState --> F3
+    simState --> F4
+    simState --> F5
+    simState --> F6
+    simState --> F7
+
+    subgraph Components ["DOM Components"]
+        VL["VehicleLayer\n(map markers)"]
+        TLL["TrafficLightLayer\n(map markers)"]
+        HL["HeatmapLayer\n(density layer)"]
+        SB_A["Analytics Tab\n(StatCard · MiniKPI · LOS)"]
+        SB_C["Charts Tab\n(Recharts)"]
+        SB_X["Congestion Tab\n(edge bars)"]
+        SB_CT["Control Tab\n(toggles · selectors)"]
+        HDR["Header\n(clock · status)"]
+        CAM["IntersectionCamera3D\n(Three.js modal)"]
+        CSS["CSS Variables\n(colors · tile URL)"]
+        RECHARTS["Recharts Props\n(DARK/LIGHT consts)"]
+    end
+
+    F1 -->|"lat · lng · speed · type"| VL
+    F1 -->|"vehicles · enabled"| HL
+    F1 -->|"vehicles (nearby)"| CAM
+
+    F2 -->|"edge_states · bearings · mode"| TLL
+    F2 -->|"edgeStates · bearings\nphaseIndex · timeLeft"| CAM
+
+    F3 -->|"avg_speed · throughput\ndelay · queue · CO₂ · LOS"| SB_A
+    F3 -->|"snapshots · comparison"| SB_C
+
+    F4 -->|"current_name"| ScenarioBadge(["Scenario Badge\n(floating)"])
+    F4 -->|"scenarios list"| SB_CT
+
+    F5 -->|"active · corridors_count"| SB_CT
+
+    F6 -->|"vehicle_count · avg_speed"| SB_X
+
+    F7 -->|"sim_clock · status\nactive_count · totals"| HDR
+
+    theme -->|"data-theme attr"| CSS
+    theme -->|"DARK / LIGHT const"| RECHARTS
+
+    activeTab -->|"renders one of four panels"| SB_A
+    activeTab -->|"renders one of four panels"| SB_C
+    activeTab -->|"renders one of four panels"| SB_X
+    activeTab -->|"renders one of four panels"| SB_CT
+
+    heatmapOn -->|"enabled prop"| HL
+
+    selectedTL -->|"open / close modal\nnodeId prop"| CAM
+
+    wsStatus -->|"indicator dot + text"| HDR
+
+    style simState fill:#1e40af,color:#fff
+    style WS fill:#065f46,color:#fff
+    style theme fill:#4c1d95,color:#fff
+    style activeTab fill:#4c1d95,color:#fff
+    style heatmapOn fill:#4c1d95,color:#fff
+    style selectedTL fill:#4c1d95,color:#fff
+    style wsStatus fill:#4c1d95,color:#fff

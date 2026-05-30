@@ -1,4 +1,5 @@
 .venv
+venv
 .claude/
 simulation/backend/venv/
 __pycache__/
